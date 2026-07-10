@@ -13,11 +13,11 @@ import (
 	"time"
 )
 
-// custom type for composable header inputs
+// for composable header inputs
 type HeaderFlags []string
 
 func main() {
-	var headers HeaderFlags
+	var headers HeaderFlags	
 
 	// cli inputs
 	flag.Var(&headers, "H", "Header (key:value)")
@@ -86,16 +86,6 @@ func main() {
 	client := &http.Client{
 		Timeout: 10 * time.Second, // timeout so that request doesnt last forever
 	} // initialising the client
-
-	// latency tracking
-	// start := time.Now()
-	// resp, err := client.Do(req)
-	// end := time.Since(start)
-
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// 	return
-	// }
 
 	// debugging
 	fmt.Println("bodyAllowed:", *allowedBody)
