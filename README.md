@@ -77,6 +77,14 @@
 <h3 align="center">
     <code> DEL [VarName] </code>
 </h3>
+<h3 align="center">to see all stored variables:</h3>
+<h3 align="center">
+    <code> FETCH </code>
+</h3>
+<h3 align="center">view all available commands whilst your in session mode:</h3>
+<h3 align="center">
+    <code> HELP </code>
+</h3>
 <br>
 <h3 align="center">using the variables you stored for API testing:</h3>
 
@@ -102,6 +110,12 @@
 <h3 align="center">
     <code> TEST [VarName] [-x POST  -F [title:value]] </code>
 </h3>
+<br>
+<h3 align="center">and finally, to exit:</h3>
+<h3 align="center">
+    <code> EXIT </code>
+</h3>
+<br>
 <h4 align="center">and make sure you use the exact format as shown, (title:value).</h4>
 <h4 align="center">also important, you can include multiple flag options at once when testing (except -F and -D for -x POST).</h4>
 
