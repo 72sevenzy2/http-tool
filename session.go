@@ -305,18 +305,9 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 		case "FETCH":
-			if len(parts) > 1 {
-				fmt.Println("invalid fetch format: only run <FETCH> to retrieve all set variables.")
+			ok := HandleFetch(parts, store)
+			if !ok { //
 				continue
-			}
-
-			vals, ok := store.GetAll()
-			if !ok {
-				fmt.Println("no variables set.")
-				continue
-			}
-			for v, i := range vals {
-				fmt.Println(i, v) // key first then value
 			}
 
 		case "HELP":
