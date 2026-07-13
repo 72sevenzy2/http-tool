@@ -71,3 +71,21 @@ func HandleDel(parts []string, store *Data) bool {
 	fmt.Println("deleted key.")
 	return true
 }
+
+// for test cmd
+
+func HandleTestValdiation(parts []string, store *Data) (string, bool) {
+	if len(parts) < 2 {
+		fmt.Println("variable as second argument does not exit, consider setting a var.")
+		return "", false
+	}
+
+	// check if variable stored exists
+	val, err := store.Get(parts[1])
+	if err != nil {
+		fmt.Println(err.Error())
+		return "", false
+	}
+
+	return val, true
+}

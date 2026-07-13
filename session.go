@@ -49,13 +49,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 			// actual api testing logic (GET only for now)
 		case "TEST":
-			if len(parts) < 2 { // validate arguments before continuing (other it will panic)
-				fmt.Println("variable as second argument does not exit, consider setting a var.")
-				continue
-			}
-			val, err := store.Get(parts[1]) // check if parts[1] exists as a var first
-			if err != nil {
-				fmt.Println(err.Error())
+			val, ok := HandleTestValdiation(parts, store)
+			if !ok {
 				continue
 			}
 
