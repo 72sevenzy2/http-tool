@@ -136,7 +136,7 @@ func HandleJsonDataInput(parts []string, partsIndex int) (bool, string) {
 		return false, ""
 	}
 
-	cleaned := strings.Join(parts[partsIndex + 3:], " ") // join json inputs
+	cleaned := strings.Join(parts[partsIndex+3:], " ") // join json inputs
 
 	// check if json is valid
 	var temp any
@@ -146,4 +146,21 @@ func HandleJsonDataInput(parts []string, partsIndex int) (bool, string) {
 	}
 
 	return true, cleaned
+}
+
+func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
+	if partsIndex+3 >= len(parts) {
+		fmt.Println("please include the necessary form data with format: 'title:value'")
+		return nil, false
+	}
+
+	formParts := strings.SplitN(parts[partsIndex+3], ":", 2) // splits form data seperated by ":", into substrings
+
+	// validate if formParts is of correct length before accessing slice (or will panic)
+	if len(formParts) < 2 || len(formParts) > 2 {
+		fmt.Println("please use the correct format.")
+		return nil, false
+	}
+
+	return formParts, true
 }

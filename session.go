@@ -123,17 +123,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						}
 
 						if uppercased1 == "-F" { // form mode
-							if i+3 >= len(parts) {
-								fmt.Println("please include the necessary form data with format: 'title:value'")
-								pass = false
-								continue
-							}
-
-							formParts := strings.SplitN(parts[i+3], ":", 2) // splits form data seperated by ":", into substrings
-
-							// validate if formParts is of correct length now (or will panic)
-							if len(formParts) < 2 || len(formParts) > 2 {
-								fmt.Println("please use the correct format.")
+							formParts, ok := HandleFormDataInput(parts, i)
+							if !ok {
 								pass = false
 								continue
 							}
