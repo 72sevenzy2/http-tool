@@ -90,12 +90,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						continue
 					}
 
-					reqHeaders = strings.SplitN(parts[i+1], ":", 2) // splits headers as:
-					// for example: header1:value, splitN() would split it so:
-					// map[string]string{
-					// 	"header1",
-					//  "value",
-					// }
+					reqHeaders = strings.SplitN(parts[i+1], ":", 2)
 
 					if len(reqHeaders) < 2 || len(reqHeaders) > 2 { // validate length of headers or it will panic during execution
 						fmt.Println("please include both header name and value.")
@@ -160,11 +155,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 								continue
 							}
 
-							formParts := strings.SplitN(parts[i+3], ":", 2) // needs to be in a format like so:
-							// "title:value", and strings.SplitN(...) would return:
-							// map[string]string{
-							//		"title": "value",
-							// }
+							formParts := strings.SplitN(parts[i+3], ":", 2)
 
 							// validate if formParts is of correct length now (or will panic)
 							if len(formParts) < 2 || len(formParts) > 2 {

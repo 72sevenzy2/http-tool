@@ -1,0 +1,5 @@
+- modularize session.go first   
+
+- add concurrency testing to session mode initially
+
+- later on, add a seperate flag
