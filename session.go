@@ -110,7 +110,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						}
 
 						if uppercased1 == "-D" { // for normal json data
-							
+
 							ok, cleanedData := HandleJsonDataInput(parts, i)
 							if !ok {
 								pass = false

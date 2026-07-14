@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -135,7 +136,14 @@ func HandleJsonDataInput(parts []string, partsIndex int) (bool, string) {
 		return false, ""
 	}
 
-	cleaned := strings.ReplaceAll(strings.ReplaceAll(strings.Join(parts[partsIndex+3:], ""), " ", ""), "\\", "")
+	cleaned := strings.Join(parts[partsIndex + 3:], " ") // join json inputs
+
+	// check if json is valid
+	var temp any
+	if err := json.Unmarshal([]byte(cleaned), &temp); err != nil {
+		fmt.Println("invalid json:", err.Error())
+		return false, ""
+	}
 
 	return true, cleaned
 }
