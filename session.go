@@ -83,27 +83,12 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				upc := strings.ToUpper(parts[i]) // normalize "-h" to all uppercase
 
 				if upc == "-H" {
-					// check if header values exist
-					if i+1 >= len(parts) {
-						fmt.Println("missing header values.")
-						pass = false
+					ok, headerSlice := HandleHeaderAppending(parts, i, upc)
+					if !ok {
 						continue
 					}
 
-					reqHeaders = strings.SplitN(parts[i+1], ":", 2)
-
-					if len(reqHeaders) < 2 || len(reqHeaders) > 2 { // validate length of headers or it will panic during execution
-						fmt.Println("please include both header name and value.")
-						pass = false
-						break
-					}
-					continue // skip
-
-					// refactored above ^ (keeping this block for future reference)
-					// if reqHeaders[0] == "" && reqHeaders[1] == "" {
-					// 	// cl.Header.Add(headers[0], headers[1])
-					// 	continue
-					// }
+					reqHeaders = headerSlice // store headerSLice contents which were extracted.
 				}
 
 				// to check if argument is for req methods
@@ -155,7 +140,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 								continue
 							}
 
-							formParts := strings.SplitN(parts[i+3], ":", 2)
+							formParts := strings.SplitN(parts[i+3], ":", 2) // splits form data seperated by ":", into substrings
 
 							// validate if formParts is of correct length now (or will panic)
 							if len(formParts) < 2 || len(formParts) > 2 {
@@ -220,7 +205,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				}
 
 				if len(reqHeaders) == 2 {
-					// attaching headers (only if json body data is not included)
+					// attaching headers (only if it json data, or form data isnt included as it would override those headers.)
 					if !isJsonH && !isFormH {
 						cl.Header.Add(reqHeaders[0], reqHeaders[1])
 					}

@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // fetch cmd
 func HandleFetch(parts []string, store *Data) bool {
@@ -67,7 +70,7 @@ func HandleDel(parts []string, store *Data) bool {
 		fmt.Println(err.Error())
 		return false
 	}
-	
+
 	fmt.Println("deleted key.")
 	return true
 }
@@ -88,4 +91,22 @@ func HandleTestValdiation(parts []string, store *Data) (string, bool) {
 	}
 
 	return val, true
+}
+
+func HandleHeaderAppending(parts []string, partsIndex int, uppercasedH string) (bool, []string) {
+	// validate if values exist
+	if partsIndex+1 >= len(parts) {
+		fmt.Println("missing header values.")
+		return false, nil
+	}
+
+	var returnSlice []string
+	returnSlice = strings.SplitN(parts[partsIndex+1], ":", 2) // would create 2 substrings on : seperation
+
+	if len(returnSlice) < 2 || len(returnSlice) > 2 {
+		fmt.Println("please include both header name and value.")
+		return false, nil
+	}
+
+	return true, returnSlice
 }
