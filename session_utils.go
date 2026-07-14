@@ -138,10 +138,14 @@ func HandleJsonDataInput(parts []string, partsIndex int) (bool, string) {
 
 	cleaned := strings.Join(parts[partsIndex+3:], " ") // join json inputs
 
-	// check if json is valid
-	var temp any
-	if err := json.Unmarshal([]byte(cleaned), &temp); err != nil {
-		fmt.Println("invalid json:", err.Error())
+	// var temp any
+	// if err := json.Unmarshal([]byte(cleaned), &temp); err != nil {
+	// 	fmt.Println("invalid json:", err.Error())
+	// 	return false, ""
+	// }
+
+	if valid := json.Valid([]byte(cleaned)); !valid {
+		fmt.Println("invalid json format.")
 		return false, ""
 	}
 
