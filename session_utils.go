@@ -75,7 +75,7 @@ func HandleDel(parts []string, store *Data) bool {
 	return true
 }
 
-// for test cmd
+// modules for test cmd:
 
 func HandleTestValdiation(parts []string, store *Data) (string, bool) {
 	if len(parts) < 2 {
@@ -109,4 +109,22 @@ func HandleHeaderAppending(parts []string, partsIndex int, uppercasedH string) (
 	}
 
 	return true, returnSlice
+}
+
+func HandleRequestMethodValidation(parts []string, partsIndex int) (bool, string) {
+	if partsIndex+1 >= len(parts) { // check if arguments after partsIndex + 1 exist
+		fmt.Println("missing argument values, consider either POST or GET.")
+		return false, ""
+	}
+
+	return true, strings.ToUpper(parts[partsIndex+1])
+}
+
+func HandlePostValidation(parts []string, partsIndex int) (bool, string) {
+	if partsIndex+2 >= len(parts) {
+		fmt.Println("missing request body flag, consider: -d [data]")
+		return false, ""
+	}
+
+	return true, strings.ToUpper(parts[partsIndex + 2])
 }

@@ -85,6 +85,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				if upc == "-H" {
 					ok, headerSlice := HandleHeaderAppending(parts, i, upc)
 					if !ok {
+						pass = false
 						continue
 					}
 
@@ -93,27 +94,20 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// to check if argument is for req methods
 				if upc == "-X" {
-
-					// validate if values exist (GET or POST)
-					if i+1 >= len(parts) {
-						fmt.Println("missing argument values, consider either POST or GET.")
+					exists, newReqMethod := HandleRequestMethodValidation(parts, i)
+					if !exists {
 						pass = false
 						continue
 					}
 
-					newReq := strings.ToUpper(parts[i+1])
-
-					if newReq == "POST" {
+					if newReqMethod == "POST" {
 						reqType = http.MethodPost
 
-						// validate if request body flag also exists aswell as its data
-						if i+2 >= len(parts) {
-							fmt.Println("missing request body flag, consider: -d [data]")
+						exists2, uppercased1 := HandlePostValidation(parts, i)
+						if !exists2 {
 							pass = false
 							continue
 						}
-
-						uppercased1 := strings.ToUpper(parts[i+2]) // normalize parts[i+2] to uppercase upon input
 
 						if uppercased1 == "-D" { // for normal json data
 
@@ -159,7 +153,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						}
 
 					} else {
-						if newReq == "GET" {
+						if newReqMethod == "GET" {
 							reqType = http.MethodGet
 						} else {
 							fmt.Println("invalid method type.")
