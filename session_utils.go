@@ -126,5 +126,16 @@ func HandlePostValidation(parts []string, partsIndex int) (bool, string) {
 		return false, ""
 	}
 
-	return true, strings.ToUpper(parts[partsIndex + 2])
+	return true, strings.ToUpper(parts[partsIndex+2])
+}
+
+func HandleJsonDataInput(parts []string, partsIndex int) (bool, string) {
+	if partsIndex+3 >= len(parts) {
+		fmt.Println("please include actual data in json format.")
+		return false, ""
+	}
+
+	cleaned := strings.ReplaceAll(strings.ReplaceAll(strings.Join(parts[partsIndex+3:], ""), " ", ""), "\\", "")
+
+	return true, cleaned
 }

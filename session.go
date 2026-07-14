@@ -110,20 +110,15 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						}
 
 						if uppercased1 == "-D" { // for normal json data
-
-							// validate if values exist
-							if i+3 >= len(parts) {
-								fmt.Println("please include actual data in json format.")
+							
+							ok, cleanedData := HandleJsonDataInput(parts, i)
+							if !ok {
 								pass = false
 								continue
 							}
 
-							// collect all input after parts[i+3]
-							// whilst also removing "\"
-							cleaned := strings.ReplaceAll(strings.ReplaceAll(strings.Join(parts[i+3:], ""), " ", ""), "\\", "")
-
 							// assign jsonData to cleaned
-							jsonData = cleaned
+							jsonData = cleanedData
 
 						}
 
