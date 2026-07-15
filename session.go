@@ -257,14 +257,12 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 			reqUrl = varVal
 
-			// reqUrl = parts[1]
-
 			// default request if flags not used
 			// req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
 			// handled reqErr below next request initialisation
 
 			if len(parts) <= 2 {
-				fmt.Println("please include a request method.")
+				fmt.Println("please include a request method (-x [method])")
 				continue
 			}
 			uc := strings.ToUpper(parts[2])
@@ -287,33 +285,36 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				}
 
 				if len(parts) <= 4 {
-					fmt.Println("please include a number of requests to be sent in double quotes.")
+					fmt.Println("please include a number of requests to be sent in double quotes (-c ['N amounts of requsts'])")
 					continue
 				}
-
-				if strings.ToUpper(parts[4]) != "" {
-					s := strings.Trim(parts[4], "\"") // remove \
-					r, err := strconv.Atoi(s)         // parse to int
-					if err != nil {
-						fmt.Println("invalid number.")
+				if strings.ToUpper(parts[4]) == "-C" {
+					if len(parts) <= 5 {
+						fmt.Println("please include a number of requests in double quotes.")
 						continue
 					}
-					reqCap = r
-					client := http.Client{}
+						s := strings.Trim(parts[5], "\"") // remove \
+						r, err := strconv.Atoi(s)         // parse to int
+						if err != nil {
+							fmt.Println("invalid number.")
+							continue
+						}
+						reqCap = r
+						client := http.Client{}
 
-					// start workers
-					for id := range reqCap {
-						go func() {
-							msg, ok := NewWorker(req, id, &client)
-							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to make request.", id)
-								fmt.Println(str)
-								return
-							}
-							time.Sleep(time.Second)
-							fmt.Println(msg)
-						}()
-					}
+						// start workers
+						for id := range reqCap {
+							go func() {
+								msg, ok := NewWorker(req, id, &client)
+								if !ok {
+									str := fmt.Sprintf("worker with id %d failed to make request.", id)
+									fmt.Println(str)
+									return
+								}
+								time.Sleep(time.Second)
+								fmt.Println(msg)
+							}()
+						}
 				}
 				// uc2 := strings.ToUpper(parts[i+3])
 				// if uc2 == "GET" {
