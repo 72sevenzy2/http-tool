@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -167,4 +168,14 @@ func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
 	}
 
 	return formParts, true
+}
+
+// spam cmd worker
+func NewWorker(req *http.Request, id int, client *http.Client) (string, bool) {
+		_, err := client.Do(req)
+		if err != nil {
+			return fmt.Sprintf("worker number %d had failed.", id), false
+	}
+
+	return fmt.Sprint("worker finished with id:", id), true
 }
