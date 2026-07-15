@@ -249,7 +249,15 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				fmt.Println("please include a url.")
 				continue
 			}
-			reqUrl = parts[1]
+
+			varVal, err := store.Get(parts[1])
+			if err != nil { // it isnt a variable, and is real url.
+				reqUrl = parts[1]
+			}
+
+			reqUrl = varVal
+
+			// reqUrl = parts[1]
 
 			// default request if flags not used
 			// req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
