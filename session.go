@@ -245,7 +245,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			reqCap = 5 // (5 requests)
 
 			// if i+1 >= len(parts) {
-			if parts[1] == "" {
+			if len(parts) <= 1 {
 				fmt.Println("please include a url.")
 				continue
 			}
@@ -255,23 +255,16 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			// req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
 			// handled reqErr below next request initialisation
 
-			// panicking below
-
-			if parts[2] == "" {
-				fmt.Println("panicked stopped.")
+			if len(parts) <= 2 {
+				fmt.Println("please include a request method.")
 				continue
 			}
-
 			uc := strings.ToUpper(parts[2])
 			if uc == "-X" {
-				if parts[2] == "" {
-					fmt.Println("please include a request method.")
-					continue
-				}
 
 				reqMethod = parts[3]
 
-				if strings.ToUpper(reqMethod) != "GET" {
+				if strings.ToUpper(reqMethod) != "GET" { // will extend to other request methods later on
 					fmt.Println("feature is only compatible with GET requests currently.")
 					continue
 				}
@@ -285,14 +278,14 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					continue // skip iteration
 				}
 
-				if parts[4] == "" {
+				if len(parts) <= 4 {
 					fmt.Println("please include a number of requests to be sent in double quotes.")
 					continue
 				}
 
 				if strings.ToUpper(parts[4]) != "" {
 					s := strings.Trim(parts[4], "\"") // remove \
-					r, err := strconv.Atoi(s) // parse to int
+					r, err := strconv.Atoi(s)         // parse to int
 					if err != nil {
 						fmt.Println("invalid number.")
 						continue
@@ -305,7 +298,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						go func() {
 							msg, ok := NewWorker(req, id, &client)
 							if !ok {
-								fmt.Println("error sending requests.")
+								str := fmt.Sprintf("worker with id %d failed to make request.", id)
+								fmt.Println(str)
 								return
 							}
 							time.Sleep(time.Second)
