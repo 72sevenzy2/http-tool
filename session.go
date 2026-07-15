@@ -6,7 +6,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // start a interactive session
@@ -229,6 +231,92 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					fmt.Println("\n", string(body))
 				}
 
+			}
+
+		case "SPAM":
+			var req *http.Request
+			var reqErr error
+			var reqMethod string
+			var reqUrl string
+			var reqCap int // N amount of requests that are to be sent
+
+			// needed defaults
+			req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
+			reqCap = 5 // (5 requests)
+
+			// if i+1 >= len(parts) {
+			if parts[1] == "" {
+				fmt.Println("please include a url.")
+				continue
+			}
+			reqUrl = parts[1]
+
+			// default request if flags not used
+			// req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
+			// handled reqErr below next request initialisation
+
+			// panicking below
+
+			if parts[2] == "" {
+				fmt.Println("panicked stopped.")
+				continue
+			}
+
+			uc := strings.ToUpper(parts[2])
+			if uc == "-X" {
+				if parts[2] == "" {
+					fmt.Println("please include a request method.")
+					continue
+				}
+
+				reqMethod = parts[3]
+
+				if strings.ToUpper(reqMethod) != "GET" {
+					fmt.Println("feature is only compatible with GET requests currently.")
+					continue
+				}
+
+				// initialise request
+				req, reqErr = http.NewRequest(reqMethod, reqUrl, nil)
+
+				// handling request error
+				if reqErr != nil {
+					fmt.Println("error initialising request.")
+					continue // skip iteration
+				}
+
+				if parts[4] == "" {
+					fmt.Println("please include a number of requests to be sent in double quotes.")
+					continue
+				}
+
+				if strings.ToUpper(parts[4]) != "" {
+					s := strings.Trim(parts[4], "\"") // remove \
+					r, err := strconv.Atoi(s) // parse to int
+					if err != nil {
+						fmt.Println("invalid number.")
+						continue
+					}
+					reqCap = r
+					client := http.Client{}
+
+					// start workers
+					for id := range reqCap {
+						go func() {
+							msg, ok := NewWorker(req, id, &client)
+							if !ok {
+								fmt.Println("error sending requests.")
+								return
+							}
+							time.Sleep(time.Second)
+							fmt.Println(msg)
+						}()
+					}
+				}
+				// uc2 := strings.ToUpper(parts[i+3])
+				// if uc2 == "GET" {
+				// 	req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
+				// }
 			}
 
 		case "FETCH":
