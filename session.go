@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // start a interactive session
@@ -85,7 +84,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				upc := strings.ToUpper(parts[i]) // normalize "-h" to all uppercase
 
 				if upc == "-H" {
-					ok, headerSlice := HandleHeaderAppending(parts, i, upc)
+					headerSlice, ok := HandleHeaderAppending(parts, i, upc)
 					if !ok {
 						pass = false
 						continue
@@ -96,7 +95,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// to check if argument is for req methods
 				if upc == "-X" {
-					exists, newReqMethod := HandleRequestMethodValidation(parts, i)
+					newReqMethod, exists := HandleRequestMethodValidation(parts, i)
 					if !exists {
 						pass = false
 						continue
@@ -105,7 +104,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					if newReqMethod == "POST" {
 						reqType = http.MethodPost
 
-						exists2, uppercased1 := HandlePostValidation(parts, i)
+						uppercased1, exists2 := HandlePostValidation(parts, i)
 						if !exists2 {
 							pass = false
 							continue
@@ -113,7 +112,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 						if uppercased1 == "-D" { // for normal json data
 
-							ok, cleanedData := HandleJsonDataInput(parts, i)
+							cleanedData, ok := HandleJsonDataInput(parts, i)
 							if !ok {
 								pass = false
 								continue
@@ -256,10 +255,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 			reqUrl = varVal
 
-			// default request if flags not used
-			// req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
-			// handled reqErr below next request initialisation
-
 			if len(parts) <= 2 {
 				fmt.Println("please include a request method (-x [method])")
 				continue
@@ -269,52 +264,110 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				reqMethod = parts[3]
 
-				if strings.ToUpper(reqMethod) != "GET" { // will extend to other request methods later on
-					fmt.Println("feature is only compatible with GET requests currently.")
+				if strings.ToUpper(reqMethod) != "GET" && strings.ToUpper(reqMethod) != "POST" {
+					fmt.Println("feature is only compatible with GET/POST requests currently.")
 					continue
 				}
 
-				// initialise request
-				req, reqErr = http.NewRequest(reqMethod, reqUrl, nil)
+				// parsing remaining parts after parts[3]
+				remainingArgs := parts[4:]
 
-				// handling request error
-				if reqErr != nil {
-					fmt.Println("error initialising request.")
-					continue // skip iteration
-				}
-
-				if len(parts) <= 4 {
-					fmt.Println("please include a number of requests to be sent in double quotes (-c ['N amounts of requsts'])")
-					continue
-				}
-				if strings.ToUpper(parts[4]) == "-C" {
-					if len(parts) <= 5 {
-						fmt.Println("please include a number of requests in double quotes.")
+				// get req
+				if strings.ToUpper(reqMethod) == "GET" {
+					if len(remainingArgs) <= 2 {
+						fmt.Println("please include number of requests that is to be sent in double quotes. (-C ['N'])")
 						continue
 					}
-					s := strings.Trim(parts[5], "\"") // remove \
-					r, err := strconv.Atoi(s)         // parse to int
+
+					// initialise get req
+					req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
+					if reqErr != nil {
+						fmt.Println("error initialising request.")
+						continue
+					}
+
+					s := strings.Trim(remainingArgs[2], "\"")
+					d, err := strconv.Atoi(s)
 					if err != nil {
 						fmt.Println("invalid number.")
 						continue
 					}
-					reqCap = r
-					client := http.Client{} // workers share the same client details instead of getting their own client struct
 
-					// start workers
-					for id := range reqCap {
+					reqCap = d
+					client := http.Client{} // workers share the same client
+
+					// initialise workers
+					for i := range reqCap {
 						go func() {
-							msg, ok := NewWorker(req, id, &client)
+							msg, ok := NewWorker(req, i, &client)
 							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to make request.", id)
+								str := fmt.Sprintf("worker with id %d failed to make request.", i)
 								fmt.Println(str)
 								return
 							}
-							time.Sleep(time.Second)
+
 							fmt.Println(msg)
 						}()
 					}
 				}
+
+				// initialise request (for GET)
+				// req, reqErr = http.NewRequest(reqMethod, reqUrl, nil)
+
+				// if strings.ToUpper(reqMethod) == "POST" {
+				// 	if len(parts) <= 4 { // for the body
+				// 		fmt.Println("missing json data.")
+				// 		continue
+				// 	}
+
+				// 	cleanedJson := strings.Join(parts[4:], " ")
+				// 	// validate json
+				// 	if ok := json.Valid([]byte(cleanedJson)); !ok {
+				// 		fmt.Println("invalid json.")
+				// 		continue
+				// 	}
+
+				// 	req, reqErr = http.NewRequest()
+				// }
+
+				// // handling request error
+				// if reqErr != nil {
+				// 	fmt.Println("error initialising request.")
+				// 	continue // skip iteration
+				// }
+
+				// if len(parts) <= 4 {
+				// 	fmt.Println("please include a number of requests to be sent in double quotes (-c ['N amounts of requsts'])")
+				// 	continue
+				// }
+				// if strings.ToUpper(parts[4]) == "-C" {
+				// 	if len(parts) <= 5 {
+				// 		fmt.Println("please include a number of requests in double quotes.")
+				// 		continue
+				// 	}
+				// 	s := strings.Trim(parts[5], "\"") // remove \
+				// 	r, err := strconv.Atoi(s)         // parse to int
+				// 	if err != nil {
+				// 		fmt.Println("invalid number.")
+				// 		continue
+				// 	}
+				// 	reqCap = r
+				// 	client := http.Client{} // workers share the same client details instead of getting their own client struct
+
+				// 	// start workers
+				// 	for id := range reqCap {
+				// 		go func() {
+				// 			msg, ok := NewWorker(req, id, &client)
+				// 			if !ok {
+				// 				str := fmt.Sprintf("worker with id %d failed to make request.", id)
+				// 				fmt.Println(str)
+				// 				return
+				// 			}
+				// 			time.Sleep(time.Second)
+				// 			fmt.Println(msg)
+				// 		}()
+				// 	}
+				// }
 				// uc2 := strings.ToUpper(parts[i+3])
 				// if uc2 == "GET" {
 				// 	req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
@@ -328,13 +381,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 		case "HELP":
-			fmt.Println("usage:")
-			fmt.Println("var <VarName> <Value>")
-			fmt.Println("to retrieve values:")
-			fmt.Println("get <VarName>")
-			fmt.Println("to test API's:")
-			fmt.Println("test <VarName> -H content-type:application -X post -D { 'name': 'name' } or -X post -F <formTitle:formValue>")
-			fmt.Println("though flags shown above are optional, but make sure <VarName> is a valid url.")
+			DisplayCmds()
 			continue
 		// for exiting
 		case "EXIT":
