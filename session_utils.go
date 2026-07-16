@@ -95,11 +95,11 @@ func HandleTestValdiation(parts []string, store *Data) (string, bool) {
 	return val, true
 }
 
-func HandleHeaderAppending(parts []string, partsIndex int, uppercasedH string) (bool, []string) {
+func HandleHeaderAppending(parts []string, partsIndex int, uppercasedH string) ([]string, bool) {
 	// validate if values exist
 	if partsIndex+1 >= len(parts) {
 		fmt.Println("missing header values.")
-		return false, nil
+		return nil, false
 	}
 
 	var returnSlice []string
@@ -107,50 +107,44 @@ func HandleHeaderAppending(parts []string, partsIndex int, uppercasedH string) (
 
 	if len(returnSlice) < 2 || len(returnSlice) > 2 {
 		fmt.Println("please include both header name and value.")
-		return false, nil
+		return nil, false
 	}
 
-	return true, returnSlice
+	return returnSlice, true
 }
 
-func HandleRequestMethodValidation(parts []string, partsIndex int) (bool, string) {
+func HandleRequestMethodValidation(parts []string, partsIndex int) (string, bool) {
 	if partsIndex+1 >= len(parts) { // check if arguments after partsIndex + 1 exist
 		fmt.Println("missing argument values, consider either POST or GET.")
-		return false, ""
+		return "", false
 	}
 
-	return true, strings.ToUpper(parts[partsIndex+1])
+	return strings.ToUpper(parts[partsIndex+1]), true
 }
 
-func HandlePostValidation(parts []string, partsIndex int) (bool, string) {
+func HandlePostValidation(parts []string, partsIndex int) (string, bool) {
 	if partsIndex+2 >= len(parts) {
 		fmt.Println("missing request body flag, consider: -d [data]")
-		return false, ""
+		return "", false
 	}
 
-	return true, strings.ToUpper(parts[partsIndex+2])
+	return strings.ToUpper(parts[partsIndex+2]), true
 }
 
-func HandleJsonDataInput(parts []string, partsIndex int) (bool, string) {
+func HandleJsonDataInput(parts []string, partsIndex int) (string, bool) {
 	if partsIndex+3 >= len(parts) {
 		fmt.Println("please include actual data in json format.")
-		return false, ""
+		return "", false
 	}
 
 	cleaned := strings.Join(parts[partsIndex+3:], " ") // join json inputs
 
-	// var temp any
-	// if err := json.Unmarshal([]byte(cleaned), &temp); err != nil {
-	// 	fmt.Println("invalid json:", err.Error())
-	// 	return false, ""
-	// }
-
 	if valid := json.Valid([]byte(cleaned)); !valid {
 		fmt.Println("invalid json format.")
-		return false, ""
+		return "", false
 	}
 
-	return true, cleaned
+	return cleaned, true
 }
 
 func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
