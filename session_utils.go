@@ -166,10 +166,22 @@ func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
 
 // spam cmd worker
 func NewWorker(req *http.Request, id int, client *http.Client) (string, bool) {
-		_, err := client.Do(req)
-		if err != nil {
-			return fmt.Sprintf("worker number %d had failed.", id), false
+	_, err := client.Do(req)
+	if err != nil {
+		return fmt.Sprintf("worker number %d had failed.", id), false
 	}
 
 	return fmt.Sprint("worker finished with id:", id), true
+}
+
+// help cmd func
+
+func DisplayCmds() {
+	fmt.Println("usage:")
+	fmt.Println("var <VarName> <Value>")
+	fmt.Println("to retrieve values:")
+	fmt.Println("get <VarName>")
+	fmt.Println("to test API's:")
+	fmt.Println("test <VarName> -H content-type:application -X post -D { 'name': 'name' } or -X post -F <formTitle:formValue>")
+	fmt.Println("though flags shown above are optional, but make sure <VarName> is a valid url.")
 }
