@@ -234,15 +234,14 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 		case "SPAM":
-			var req *http.Request
-			var reqErr error
-			var reqMethod string
-			var reqUrl string
-			var reqCap int // N amount of requests that are to be sent
+			var (
+				reqMethod string
+				reqUrl    string
+			)
 
 			// needed defaults
-			req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
-			reqCap = 5 // (5 requests)
+			req, reqErr := http.NewRequest(http.MethodGet, reqUrl, nil)
+			reqCap := 5 // N amount of requests that are to be sent
 
 			// if i+1 >= len(parts) {
 			if len(parts) <= 1 {
@@ -293,28 +292,28 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						fmt.Println("please include a number of requests in double quotes.")
 						continue
 					}
-						s := strings.Trim(parts[5], "\"") // remove \
-						r, err := strconv.Atoi(s)         // parse to int
-						if err != nil {
-							fmt.Println("invalid number.")
-							continue
-						}
-						reqCap = r
-						client := http.Client{}
+					s := strings.Trim(parts[5], "\"") // remove \
+					r, err := strconv.Atoi(s)         // parse to int
+					if err != nil {
+						fmt.Println("invalid number.")
+						continue
+					}
+					reqCap = r
+					client := http.Client{} // workers share the same client details instead of getting their own client struct
 
-						// start workers
-						for id := range reqCap {
-							go func() {
-								msg, ok := NewWorker(req, id, &client)
-								if !ok {
-									str := fmt.Sprintf("worker with id %d failed to make request.", id)
-									fmt.Println(str)
-									return
-								}
-								time.Sleep(time.Second)
-								fmt.Println(msg)
-							}()
-						}
+					// start workers
+					for id := range reqCap {
+						go func() {
+							msg, ok := NewWorker(req, id, &client)
+							if !ok {
+								str := fmt.Sprintf("worker with id %d failed to make request.", id)
+								fmt.Println(str)
+								return
+							}
+							time.Sleep(time.Second)
+							fmt.Println(msg)
+						}()
+					}
 				}
 				// uc2 := strings.ToUpper(parts[i+3])
 				// if uc2 == "GET" {
