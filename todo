@@ -1,5 +1,0 @@
-- update readme with missing details about -X only supporting get/post only for now
-
-- add additional details regarding new feature and usage in docs
-
-- add retry for if url provided in spam cmd is variable (meaning that the retry should fetch that var and get its actual url)
