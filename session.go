@@ -277,33 +277,42 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// get req
 				if strings.ToUpper(reqMethod) == "GET" {
-					if len(remainingArgs) <= 2 {
-						fmt.Println("please include number of requests that is to be sent in double quotes (-C ['N']).")
+					if len(remainingArgs) < 2 {
+						fmt.Println("not enough arguments, please consider: -")
 						continue
 					}
 
-					// initialise get req
+					for i := range len(remainingArgs) {
+						switch strings.ToUpper(remainingArgs[i]) {
+						case "-C":
+							if len(remainingArgs) <= i+1 {
+								fmt.Println("please include a value for -C")
+								continue
+							}
+
+							s := strings.Trim(remainingArgs[i+1], "\"")
+							d, err := strconv.Atoi(s)
+							if err != nil {
+								fmt.Println("not a valid number.")
+								continue
+							}
+
+							reqCap = d
+						}
+					}
+
 					req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
 					if reqErr != nil {
-						fmt.Println("error initialising request.")
+						fmt.Println("error initialsing request.")
 						continue
 					}
 
-					s := strings.Trim(remainingArgs[2], "\"")
-					d, err := strconv.Atoi(s)
-					if err != nil {
-						fmt.Println("invalid number.")
-						continue
-					}
-
-					reqCap = d
-
-					// initialise workers
+					// workers
 					for i := range reqCap {
-						go func() {
+						go func ()  {
 							msg, ok := NewWorker(req, i, &client)
 							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to make request.", i)
+								str := fmt.Sprintf("worker with id %d failed to send request.", i)
 								fmt.Println(str)
 								return
 							}
@@ -311,8 +320,39 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							fmt.Println(msg)
 						}()
 					}
+
+					// // initialise get req
+					// req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
+					// if reqErr != nil {
+					// 	fmt.Println("error initialising request.")
+					// 	continue
+					// }
+
+					// s := strings.Trim(remainingArgs[2], "\"")
+					// d, err := strconv.Atoi(s)
+					// if err != nil {
+					// 	fmt.Println("invalid number.")
+					// 	continue
+					// }
+
+					// reqCap = d
+
+					// // initialise workers
+					// for i := range reqCap {
+					// 	go func() {
+					// 		msg, ok := NewWorker(req, i, &client)
+					// 		if !ok {
+					// 			str := fmt.Sprintf("worker with id %d failed to make request.", i)
+					// 			fmt.Println(str)
+					// 			return
+					// 		}
+
+					// 		fmt.Println(msg)
+					// 	}()
+					// }
 				}
 
+				// post req
 				if strings.ToUpper(reqMethod) == "POST" {
 					if len(remainingArgs) < 4 {
 						fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
@@ -323,12 +363,12 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					for i := range len(remainingArgs) {
 						switch strings.ToUpper(remainingArgs[i]) {
 						case "-C":
-							if len(remainingArgs) < i + 1 { // prevents panic
+							if len(remainingArgs) <= i+1 { // prevents panic
 								fmt.Println("please include a value for -C.")
 								continue
 							}
 
-							s := strings.Trim(remainingArgs[i + 1], "\"")
+							s := strings.Trim(remainingArgs[i+1], "\"")
 							r, err := strconv.Atoi(s)
 							if err != nil {
 								fmt.Println("not a valid number.")
@@ -337,7 +377,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							reqCap = r
 
 						case "-D":
-							if len(remainingArgs) < i + 1 {
+							if len(remainingArgs) <= i+1 {
 								fmt.Println("please include a value for -D.")
 								continue
 							}
@@ -360,7 +400,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					}
 
 					for id := range reqCap {
-						go func ()  {
+						go func() {
 							msg, ok := NewWorker(req, id, &client)
 							if !ok {
 								str := fmt.Sprintf("worker with id %d failed to send request.", id)
