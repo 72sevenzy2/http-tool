@@ -1,9 +1,0 @@
-- update readme with missing details about -X only supporting get/post only for now
-
-- add additional details regarding new feature and usage in docs
-
-- extend spam cmd to work with post requests next + update docs with so
-
-- delete method (storage.go): return value of key before deletion 
- 
-- make small helper function for validating json 
