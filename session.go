@@ -234,8 +234,11 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 		case "SPAM":
 			var (
+				client http.Client
+
 				reqMethod string
 				reqUrl    string
+				reqBody   io.Reader
 			)
 
 			// needed defaults
@@ -275,7 +278,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				// get req
 				if strings.ToUpper(reqMethod) == "GET" {
 					if len(remainingArgs) <= 2 {
-						fmt.Println("please include number of requests that is to be sent in double quotes. (-C ['N'])")
+						fmt.Println("please include number of requests that is to be sent in double quotes (-C ['N']).")
 						continue
 					}
 
@@ -294,7 +297,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					}
 
 					reqCap = d
-					client := http.Client{} // workers share the same client
 
 					// initialise workers
 					for i := range reqCap {
@@ -302,6 +304,60 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							msg, ok := NewWorker(req, i, &client)
 							if !ok {
 								str := fmt.Sprintf("worker with id %d failed to make request.", i)
+								fmt.Println(str)
+								return
+							}
+
+							fmt.Println(msg)
+						}()
+					}
+				}
+
+				if strings.ToUpper(reqMethod) == "POST" {
+					if len(remainingArgs) <= 2 {
+						fmt.Println("please include number of requests that is to be sent in double quotes (-C ['N']).")
+						continue
+					}
+
+					// req initialisation later
+
+					// todo: validate if flag is -C
+					// for reqcap and parsing -C value
+					s := strings.Trim(remainingArgs[2], "\"")
+					d, err := strconv.Atoi(s)
+					if err != nil {
+						fmt.Println("not a valid number.")
+						continue
+					}
+					reqCap = d
+
+					// body extraction
+					if len(remainingArgs) <= 4 {
+						fmt.Println("please include a json body (-d [json]).")
+						continue
+					}
+
+					// todo: validate if flag is -d
+
+					reqBody = strings.NewReader(strings.Join(remainingArgs[4:], " "))
+					valid := IsValidJson([]byte(strings.Join(remainingArgs[4:], " ")))
+					if !valid {
+						fmt.Println("invalid json.")
+						continue
+					}
+
+					req, reqErr = http.NewRequest(http.MethodPost, reqUrl, reqBody)
+					if reqErr != nil {
+						fmt.Println("error initialising request.")
+						continue
+					}
+
+					// start workers
+					for id := range reqCap {
+						go func() {
+							msg, ok := NewWorker(req, id, &client)
+							if !ok {
+								str := fmt.Sprintf("worker with id %d failed to make request.", id)
 								fmt.Println(str)
 								return
 							}
