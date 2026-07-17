@@ -314,120 +314,115 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				}
 
 				if strings.ToUpper(reqMethod) == "POST" {
-					if len(remainingArgs) <= 2 {
-						fmt.Println("please include number of requests that is to be sent in double quotes (-C ['N']).")
+					if len(remainingArgs) < 4 {
+						fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
 						continue
 					}
 
-					// req initialisation later
+					// loop over all remaining args
+					for i := range len(remainingArgs) {
+						switch strings.ToUpper(remainingArgs[i]) {
+						case "-C":
+							if len(remainingArgs) < i + 1 { // prevents panic
+								fmt.Println("please include a value for -C.")
+								continue
+							}
 
-					// todo: validate if flag is -C
-					// for reqcap and parsing -C value
-					s := strings.Trim(remainingArgs[2], "\"")
-					d, err := strconv.Atoi(s)
-					if err != nil {
-						fmt.Println("not a valid number.")
-						continue
+							s := strings.Trim(remainingArgs[i + 1], "\"")
+							r, err := strconv.Atoi(s)
+							if err != nil {
+								fmt.Println("not a valid number.")
+								continue
+							}
+							reqCap = r
+
+						case "-D":
+							if len(remainingArgs) < i + 1 {
+								fmt.Println("please include a value for -D.")
+								continue
+							}
+
+							cleanedJson := strings.Trim(remainingArgs[i+1], "\"")
+							if ok := IsValidJson([]byte(cleanedJson)); !ok {
+								fmt.Println("invalid json format.")
+								continue
+							}
+
+							reqBody = strings.NewReader(cleanedJson)
+						}
 					}
-					reqCap = d
 
-					// body extraction
-					if len(remainingArgs) <= 4 {
-						fmt.Println("please include a json body (-d [json]).")
-						continue
-					}
-
-					// todo: validate if flag is -d
-
-					reqBody = strings.NewReader(strings.Join(remainingArgs[4:], " "))
-					valid := IsValidJson([]byte(strings.Join(remainingArgs[4:], " ")))
-					if !valid {
-						fmt.Println("invalid json.")
-						continue
-					}
-
+					// req initialisation and starting workers after loop
 					req, reqErr = http.NewRequest(http.MethodPost, reqUrl, reqBody)
 					if reqErr != nil {
 						fmt.Println("error initialising request.")
 						continue
 					}
 
-					// start workers
 					for id := range reqCap {
-						go func() {
+						go func ()  {
 							msg, ok := NewWorker(req, id, &client)
 							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to make request.", id)
+								str := fmt.Sprintf("worker with id %d failed to send request.", id)
 								fmt.Println(str)
 								return
 							}
-
 							fmt.Println(msg)
 						}()
 					}
+
+					// if len(remainingArgs) <= 2 {
+					// 	fmt.Println("please include number of requests that is to be sent in double quotes (-C ['N']).")
+					// 	continue
+					// }
+
+					// // req initialisation later
+
+					// // todo: validate if flag is -C
+					// // for reqcap and parsing -C value
+					// s := strings.Trim(remainingArgs[2], "\"")
+					// d, err := strconv.Atoi(s)
+					// if err != nil {
+					// 	fmt.Println("not a valid number.")
+					// 	continue
+					// }
+					// reqCap = d
+
+					// // body extraction
+					// if len(remainingArgs) <= 4 {
+					// 	fmt.Println("please include a json body (-d [json]).")
+					// 	continue
+					// }
+
+					// // todo: validate if flag is -d
+
+					// reqBody = strings.NewReader(strings.Join(remainingArgs[4:], " "))
+					// valid := IsValidJson([]byte(strings.Join(remainingArgs[4:], " ")))
+					// if !valid {
+					// 	fmt.Println("invalid json.")
+					// 	continue
+					// }
+
+					// req, reqErr = http.NewRequest(http.MethodPost, reqUrl, reqBody)
+					// if reqErr != nil {
+					// 	fmt.Println("error initialising request.")
+					// 	continue
+					// }
+
+					// // start workers
+					// for id := range reqCap {
+					// 	go func() {
+					// 		msg, ok := NewWorker(req, id, &client)
+					// 		if !ok {
+					// 			str := fmt.Sprintf("worker with id %d failed to make request.", id)
+					// 			fmt.Println(str)
+					// 			return
+					// 		}
+
+					// 		fmt.Println(msg)
+					// 	}()
+					// }
 				}
-
-				// initialise request (for GET)
-				// req, reqErr = http.NewRequest(reqMethod, reqUrl, nil)
-
-				// if strings.ToUpper(reqMethod) == "POST" {
-				// 	if len(parts) <= 4 { // for the body
-				// 		fmt.Println("missing json data.")
-				// 		continue
-				// 	}
-
-				// 	cleanedJson := strings.Join(parts[4:], " ")
-				// 	// validate json
-				// 	if ok := json.Valid([]byte(cleanedJson)); !ok {
-				// 		fmt.Println("invalid json.")
-				// 		continue
-				// 	}
-
-				// 	req, reqErr = http.NewRequest()
-				// }
-
-				// // handling request error
-				// if reqErr != nil {
-				// 	fmt.Println("error initialising request.")
-				// 	continue // skip iteration
-				// }
-
-				// if len(parts) <= 4 {
-				// 	fmt.Println("please include a number of requests to be sent in double quotes (-c ['N amounts of requsts'])")
-				// 	continue
-				// }
-				// if strings.ToUpper(parts[4]) == "-C" {
-				// 	if len(parts) <= 5 {
-				// 		fmt.Println("please include a number of requests in double quotes.")
-				// 		continue
-				// 	}
-				// 	s := strings.Trim(parts[5], "\"") // remove \
-				// 	r, err := strconv.Atoi(s)         // parse to int
-				// 	if err != nil {
-				// 		fmt.Println("invalid number.")
-				// 		continue
-				// 	}
-				// 	reqCap = r
-				// 	client := http.Client{} // workers share the same client details instead of getting their own client struct
-
-				// 	// start workers
-				// 	for id := range reqCap {
-				// 		go func() {
-				// 			msg, ok := NewWorker(req, id, &client)
-				// 			if !ok {
-				// 				str := fmt.Sprintf("worker with id %d failed to make request.", id)
-				// 				fmt.Println(str)
-				// 				return
-				// 			}
-				// 			time.Sleep(time.Second)
-				// 			fmt.Println(msg)
-				// 		}()
-				// 	}
-				// }
-				// uc2 := strings.ToUpper(parts[i+3])
-				// if uc2 == "GET" {
-				// 	req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
-				// }
 			}
 
 		case "FETCH":
