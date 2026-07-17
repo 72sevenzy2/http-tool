@@ -131,6 +131,14 @@ func HandlePostValidation(parts []string, partsIndex int) (string, bool) {
 	return strings.ToUpper(parts[partsIndex+2]), true
 }
 
+// small util func for validating json inputs
+func IsValidJson(str []byte) bool {
+	if v := json.Valid(str); !v {
+		return false
+	}
+	return true
+}
+
 func HandleJsonDataInput(parts []string, partsIndex int) (string, bool) {
 	if partsIndex+3 >= len(parts) {
 		fmt.Println("please include actual data in json format.")
@@ -139,7 +147,8 @@ func HandleJsonDataInput(parts []string, partsIndex int) (string, bool) {
 
 	cleaned := strings.Join(parts[partsIndex+3:], " ") // join json inputs
 
-	if valid := json.Valid([]byte(cleaned)); !valid {
+	valid := IsValidJson([]byte(cleaned))
+	if !valid {
 		fmt.Println("invalid json format.")
 		return "", false
 	}
