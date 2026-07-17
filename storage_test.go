@@ -13,8 +13,8 @@ func TestStorage(t *testing.T) {
 	}
 	fmt.Println("could not save data")
 
-	k := store.Del(1)
-	if k != nil {
+	_, ok := store.Del(1)
+	if !ok {
 		fmt.Println("key does no exist.")
 	}
 

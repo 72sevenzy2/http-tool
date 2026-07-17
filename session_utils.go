@@ -67,9 +67,9 @@ func HandleDel(parts []string, store *Data) bool {
 		return false
 	}
 
-	err := store.Del(parts[1])
-	if err != nil {
-		fmt.Println(err.Error())
+	msg, ok := store.Del(parts[1])
+	if !ok {
+		fmt.Println(msg)
 		return false
 	}
 

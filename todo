@@ -2,4 +2,8 @@
 
 - add additional details regarding new feature and usage in docs
 
-- add retry for if url provided in spam cmd is variable (meaning that the retry should fetch that var and get its actual url)
+- extend spam cmd to work with post requests next + update docs with so
+
+- delete method (storage.go): return value of key before deletion 
+ 
+- make small helper function for validating json 
