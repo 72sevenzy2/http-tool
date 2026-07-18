@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -173,7 +174,8 @@ func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
 	return formParts, true
 }
 
-// spam cmd worker
+// spam cmd utils:
+
 func NewWorker(req *http.Request, id int, client *http.Client) (string, bool) {
 	_, err := client.Do(req)
 	if err != nil {
@@ -181,6 +183,15 @@ func NewWorker(req *http.Request, id int, client *http.Client) (string, bool) {
 	}
 
 	return fmt.Sprint("worker finished with id:", id), true
+}
+
+type SpamConf struct {
+	client http.Client
+
+	reqBody   io.Reader
+	reqUrl    string
+	reqMethod string
+	reqCap    int
 }
 
 // help cmd func

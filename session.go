@@ -233,17 +233,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 		case "SPAM":
-			var ( // todo: switch this to config struct
-				client http.Client
-
-				reqMethod string
-				reqUrl    string
-				reqBody   io.Reader
-			)
-
-			// needed defaults
-			req, reqErr := http.NewRequest(http.MethodGet, reqUrl, nil)
-			reqCap := 5 // N amount of requests that are to be sent
+			conf := &SpamConf{}
 
 			// if i+1 >= len(parts) {
 			if len(parts) <= 1 {
@@ -253,10 +243,17 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 			varVal, err := store.Get(parts[1])
 			if err != nil { // it isnt a variable, and is real url.
-				reqUrl = parts[1]
+				conf.reqUrl = parts[1]
 			}
 
-			reqUrl = varVal
+			conf.reqUrl = varVal
+
+
+
+			// needed defaults
+			req, reqErr := http.NewRequest(http.MethodGet, conf.reqUrl, nil)
+			conf.reqCap = 5 // N amount of requests that are to be sent
+
 
 			if len(parts) <= 2 {
 				fmt.Println("please include a request method (-x [method])")
@@ -265,9 +262,9 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			uc := strings.ToUpper(parts[2])
 			if uc == "-X" {
 
-				reqMethod = parts[3]
+				conf.reqMethod = parts[3]
 
-				if strings.ToUpper(reqMethod) != "GET" && strings.ToUpper(reqMethod) != "POST" {
+				if strings.ToUpper(conf.reqMethod) != "GET" && strings.ToUpper(conf.reqMethod) != "POST" {
 					fmt.Println("feature is only compatible with GET/POST requests currently.")
 					continue
 				}
@@ -276,7 +273,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				remainingArgs := parts[4:]
 
 				// get req
-				if strings.ToUpper(reqMethod) == "GET" {
+				if strings.ToUpper(conf.reqMethod) == "GET" {
 					if len(remainingArgs) < 2 {
 						fmt.Println("not enough arguments, please consider: -")
 						continue
@@ -297,7 +294,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 								continue
 							}
 
-							reqCap = d
+							conf.reqCap = d
 
 						default:
 							fmt.Println("invalid command.")
@@ -305,16 +302,16 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						}
 					}
 
-					req, reqErr = http.NewRequest(http.MethodGet, reqUrl, nil)
+					req, reqErr = http.NewRequest(http.MethodGet, conf.reqUrl, nil)
 					if reqErr != nil {
 						fmt.Println("error initialsing request.")
 						continue
 					}
 
 					// workers
-					for i := range reqCap {
-						go func ()  {
-							msg, ok := NewWorker(req, i, &client)
+					for i := range conf.reqCap {
+						go func() {
+							msg, ok := NewWorker(req, i, &conf.client)
 							if !ok {
 								str := fmt.Sprintf("worker with id %d failed to send request.", i)
 								fmt.Println(str)
@@ -327,7 +324,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				}
 
 				// post req
-				if strings.ToUpper(reqMethod) == "POST" {
+				if strings.ToUpper(conf.reqMethod) == "POST" {
 					if len(remainingArgs) < 4 {
 						fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
 						continue
@@ -348,7 +345,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 								fmt.Println("not a valid number.")
 								continue
 							}
-							reqCap = r
+							conf.reqCap = r
 
 						case "-D":
 							if len(remainingArgs) <= i+1 {
@@ -362,7 +359,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 								continue
 							}
 
-							reqBody = strings.NewReader(cleanedJson)
+							conf.reqBody = strings.NewReader(cleanedJson)
 						default:
 							fmt.Println("invalid command.")
 							continue
@@ -370,15 +367,15 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					}
 
 					// req initialisation and starting workers after loop
-					req, reqErr = http.NewRequest(http.MethodPost, reqUrl, reqBody)
+					req, reqErr = http.NewRequest(http.MethodPost, conf.reqUrl, conf.reqBody)
 					if reqErr != nil {
 						fmt.Println("error initialising request.")
 						continue
 					}
 
-					for id := range reqCap {
+					for id := range conf.reqCap {
 						go func() {
-							msg, ok := NewWorker(req, id, &client)
+							msg, ok := NewWorker(req, id, &conf.client)
 							if !ok {
 								str := fmt.Sprintf("worker with id %d failed to send request.", id)
 								fmt.Println(str)
