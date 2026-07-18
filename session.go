@@ -299,26 +299,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							continue
 						}
 					}
-
-					req, reqErr = http.NewRequest(http.MethodGet, conf.reqUrl, nil)
-					if reqErr != nil {
-						fmt.Println("error initialsing request.")
-						continue
-					}
-
-					// workers
-					for i := range conf.reqCap {
-						go func(id int) {
-							msg, ok := NewWorker(req, id, &conf.client)
-							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to send request.", id)
-								fmt.Println(str)
-								return
-							}
-
-							fmt.Println(msg)
-						}(i)
-					}
 				}
 
 				// post req
@@ -367,25 +347,25 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							continue
 						}
 					}
+				}
 
-					// req initialisation and starting workers after loop
-					req, reqErr = http.NewRequest(http.MethodPost, conf.reqUrl, conf.reqBody)
-					if reqErr != nil {
-						fmt.Println("error initialising request.")
-						continue
-					}
+				// initialising final req
+				req, reqErr = http.NewRequest(conf.reqMethod, conf.reqUrl, conf.reqBody)
+				if reqErr != nil {
+					fmt.Println("error initialising request.")
+					continue
+				}
 
-					for i := range conf.reqCap {
-						go func(id int) {
-							msg, ok := NewWorker(req, id, &conf.client)
-							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to send request.", id)
-								fmt.Println(str)
-								return
-							}
-							fmt.Println(msg)
-						}(i)
-					}
+				for i := range conf.reqCap {
+					go func(id int) {
+						msg, ok := NewWorker(req, id, &conf.client)
+						if !ok {
+							str := fmt.Sprintf("worker with id %d failed to send request.", id)
+							fmt.Println(str)
+							return // exit
+						}
+						fmt.Println(msg)
+					}(i)
 				}
 			}
 
