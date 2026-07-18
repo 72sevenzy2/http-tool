@@ -242,16 +242,14 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 			varVal, err := store.Get(parts[1])
+			conf.reqUrl = varVal
 			if err != nil { // it isnt a variable, and is real url.
 				conf.reqUrl = parts[1]
 			}
 
-			conf.reqUrl = varVal
-
 			// needed defaults
 			req, reqErr := http.NewRequest(http.MethodGet, conf.reqUrl, nil)
 			conf.reqCap = 5 // N amount of requests that are to be sent
-
 
 			if len(parts) <= 2 {
 				fmt.Println("please include a request method (-x [method])")
@@ -293,6 +291,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							}
 
 							conf.reqCap = d
+
+							i++ // skip next value so default case doesnt pick up on it
 
 						default:
 							fmt.Println("invalid command.")
@@ -345,6 +345,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							}
 							conf.reqCap = r
 
+							i++
+
 						case "-D":
 							if len(remainingArgs) <= i+1 {
 								fmt.Println("please include a value for -D.")
@@ -358,6 +360,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							}
 
 							conf.reqBody = strings.NewReader(cleanedJson)
+
+							i++
 						default:
 							fmt.Println("invalid command.")
 							continue
