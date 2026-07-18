@@ -248,8 +248,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 			conf.reqUrl = varVal
 
-
-
 			// needed defaults
 			req, reqErr := http.NewRequest(http.MethodGet, conf.reqUrl, nil)
 			conf.reqCap = 5 // N amount of requests that are to be sent
@@ -310,16 +308,16 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 					// workers
 					for i := range conf.reqCap {
-						go func() {
-							msg, ok := NewWorker(req, i, &conf.client)
+						go func(id int) {
+							msg, ok := NewWorker(req, id, &conf.client)
 							if !ok {
-								str := fmt.Sprintf("worker with id %d failed to send request.", i)
+								str := fmt.Sprintf("worker with id %d failed to send request.", id)
 								fmt.Println(str)
 								return
 							}
 
 							fmt.Println(msg)
-						}()
+						}(i)
 					}
 				}
 
@@ -373,8 +371,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						continue
 					}
 
-					for id := range conf.reqCap {
-						go func() {
+					for i := range conf.reqCap {
+						go func(id int) {
 							msg, ok := NewWorker(req, id, &conf.client)
 							if !ok {
 								str := fmt.Sprintf("worker with id %d failed to send request.", id)
@@ -382,7 +380,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 								return
 							}
 							fmt.Println(msg)
-						}()
+						}(i)
 					}
 				}
 			}
