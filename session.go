@@ -235,16 +235,9 @@ func StartSession(b *bufio.Scanner, store *Data) {
 		case "SPAM":
 			conf := &SpamConf{}
 
-			// if i+1 >= len(parts) {
-			if len(parts) <= 1 {
-				fmt.Println("please include a url.")
+			ok := ExtractSpamUrl(parts, store) // conf.reqUrl would hold url
+			if !ok {
 				continue
-			}
-
-			varVal, err := store.Get(parts[1])
-			conf.reqUrl = varVal
-			if err != nil { // it isnt a variable, and is real url.
-				conf.reqUrl = parts[1]
 			}
 
 			// needed defaults
@@ -270,34 +263,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// get req
 				if strings.ToUpper(conf.reqMethod) == "GET" {
-					if len(remainingArgs) < 2 {
-						fmt.Println("not enough arguments, please consider: -")
+					if ok := HandleSpamGet(remainingArgs); !ok {
 						continue
-					}
-
-					for i := range len(remainingArgs) {
-						switch strings.ToUpper(remainingArgs[i]) {
-						case "-C":
-							if len(remainingArgs) <= i+1 {
-								fmt.Println("please include a value for -C")
-								continue
-							}
-
-							s := strings.Trim(remainingArgs[i+1], "\"")
-							d, err := strconv.Atoi(s)
-							if err != nil {
-								fmt.Println("not a valid number.")
-								continue
-							}
-
-							conf.reqCap = d
-
-							i++ // skip next value so default case doesnt pick up on it
-
-						default:
-							fmt.Println("invalid command.")
-							continue
-						}
 					}
 				}
 
