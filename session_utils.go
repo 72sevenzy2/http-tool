@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -192,6 +193,60 @@ type SpamConf struct {
 	reqUrl    string
 	reqMethod string
 	reqCap    int
+}
+
+// spam cmd modularization:
+
+func ExtractSpamUrl(parts []string, store *Data) bool {
+	conf := &SpamConf{} // modify config directly
+
+	if len(parts) <= 1 {
+		fmt.Println("please include a url.")
+		return false
+	}
+
+	varVal, err := store.Get(parts[1])
+	conf.reqUrl = varVal
+	if err != nil {
+		conf.reqUrl = parts[1] // if not real variable
+	}
+
+	return true
+}
+
+func HandleSpamGet(remainingArgs []string) bool {
+	conf := &SpamConf{}
+
+	if len(remainingArgs) < 2 {
+		fmt.Println("not enough arguments, please consider: -C")
+		return false
+	}
+
+	for i := range len(remainingArgs) {
+		switch strings.ToUpper(remainingArgs[i]) {
+		case "-D":
+			if len(remainingArgs) <= i+1 {
+				fmt.Println("please include a value for -C.")
+				continue
+			}
+
+			s := strings.Trim(remainingArgs[i+1], "\"")
+			d, err := strconv.Atoi(s)
+			if err != nil {
+				fmt.Println("invalid number.")
+				continue
+			}
+
+			conf.reqCap = d
+
+			i++ // skip value of remainingArgs[i+1] so default case doesnt pick it up.
+
+		default:
+			fmt.Println("not a valid command.")
+			continue
+		}
+	}
+	return true
 }
 
 // help cmd func
