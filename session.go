@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -270,49 +269,9 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// post req
 				if strings.ToUpper(conf.reqMethod) == "POST" {
-					if len(remainingArgs) < 4 {
-						fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
+					ok := HandleSpamPost(remainingArgs)
+					if !ok {
 						continue
-					}
-
-					// loop over all remaining args
-					for i := range len(remainingArgs) {
-						switch strings.ToUpper(remainingArgs[i]) {
-						case "-C":
-							if len(remainingArgs) <= i+1 { // prevents panic
-								fmt.Println("please include a value for -C.")
-								continue
-							}
-
-							s := strings.Trim(remainingArgs[i+1], "\"")
-							r, err := strconv.Atoi(s)
-							if err != nil {
-								fmt.Println("not a valid number.")
-								continue
-							}
-							conf.reqCap = r
-
-							i++
-
-						case "-D":
-							if len(remainingArgs) <= i+1 {
-								fmt.Println("please include a value for -D.")
-								continue
-							}
-
-							cleanedJson := strings.Trim(remainingArgs[i+1], "\"")
-							if ok := IsValidJson([]byte(cleanedJson)); !ok {
-								fmt.Println("invalid json format.")
-								continue
-							}
-
-							conf.reqBody = strings.NewReader(cleanedJson)
-
-							i++
-						default:
-							fmt.Println("invalid command.")
-							continue
-						}
 					}
 				}
 

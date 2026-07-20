@@ -249,6 +249,55 @@ func HandleSpamGet(remainingArgs []string) bool {
 	return true
 }
 
+func HandleSpamPost(remainingArgs []string) bool {
+	conf := &SpamConf{}
+
+	if len(remainingArgs) < 4 {
+		fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
+		return false
+	}
+
+	for i := range len(remainingArgs) {
+		switch strings.ToUpper(remainingArgs[i]) {
+		case "-C":
+			if len(remainingArgs) <= i+1 {
+				fmt.Println("please include a value for -C.")
+				return false
+			}
+
+			s := strings.Trim(remainingArgs[i+1], "\"")
+			d, err := strconv.Atoi(s)
+			if err != nil {
+				fmt.Println("not a valid numebr.")
+				return false
+			}
+
+			conf.reqCap = d
+			i++
+
+		case "-D":
+			if len(remainingArgs) <= i+1 {
+				fmt.Println("please include a value for -D.")
+				return false
+			}
+
+			cleanedJson := strings.Trim(remainingArgs[i+1], "\"") // remove newline slashes
+			if ok := IsValidJson([]byte(cleanedJson)); !ok {
+				fmt.Println("invalid json format.")
+				return false
+			}
+
+			conf.reqBody = strings.NewReader(cleanedJson)
+			i++
+
+		default:
+			fmt.Println("not a valid command.")
+			continue
+		}
+	}
+	return true
+}
+
 // help cmd func
 
 func DisplayCmds() {
