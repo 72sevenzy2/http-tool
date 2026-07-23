@@ -107,8 +107,8 @@ func main() {
 		fmt.Println("body is empty")
 	}
 
-	if err != nil {
-		log.Fatal(err.Error())
+	if LoggingConf.Reqerr != nil {
+		log.Fatal(LoggingConf.Reqerr.Error())
 		return
 	}
 
