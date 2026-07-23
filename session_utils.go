@@ -81,6 +81,42 @@ func HandleDel(parts []string, store *Data) bool {
 
 // modules for test cmd:
 
+// config structs for test cmd dependent data.
+
+// utility fields
+type TestUtilConf struct {
+	pass bool
+	reqType string
+	jsonData string
+}
+
+func InitTestUtilConf() *TestUtilConf {
+	return &TestUtilConf{
+		pass: true, // default
+		reqType: "",
+		jsonData: "",
+	}
+}
+
+// request dependent fields
+type TestReqConf struct {
+	cl *http.Request
+	clErr error
+
+	reqHeaders []string
+	formBody io.Reader
+}
+
+func InitTestReqConf() *TestReqConf {
+	return &TestReqConf{
+		cl: nil,
+		clErr: nil,
+
+		reqHeaders: nil,
+		formBody: nil,
+	}
+}
+
 func HandleTestValdiation(parts []string, store *Data) (string, bool) {
 	if len(parts) < 2 {
 		fmt.Println("variable as second argument does not exit, consider setting a var.")

@@ -55,27 +55,12 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 			//  utility variables
-			var (
-				pass    bool // determine whether final output block runs
-				reqType string
-				// bodyData map[string]string
-				jsonData string
-			)
-			pass = true
-
+			UtilConf := InitTestUtilConf()
 			// request dependent variables
-			var (
-				cl    *http.Request
-				clErr error
 
-				// for appending headers
-				reqHeaders []string // reqHeaders being globally accessed by this scope, so headers can be assigned after initialising request.
-
-				formBody io.Reader // to hold form data
-			)
-
+			ReqConf := InitTestReqConf()
 			// default request (GET) so cl does not stay nil if user were not to pass -X
-			cl, clErr = http.NewRequest(http.MethodGet, val, nil)
+			ReqConf.cl, ReqConf.clErr = http.NewRequest(http.MethodGet, val, nil)
 			// clErr is handled below, after flags are parsed and appropriate requests are made.
 
 			// parse header arguments
@@ -85,27 +70,27 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				if upc == "-H" {
 					headerSlice, ok := HandleHeaderAppending(parts, i, upc)
 					if !ok {
-						pass = false
+						UtilConf.pass = false
 						continue
 					}
 
-					reqHeaders = headerSlice // store headerSLice contents which were extracted.
+					ReqConf.reqHeaders = headerSlice // store headerSLice contents which were extracted.
 				}
 
 				// to check if argument is for req methods
 				if upc == "-X" {
 					newReqMethod, exists := HandleRequestMethodValidation(parts, i)
 					if !exists {
-						pass = false
+						UtilConf.pass = false
 						continue
 					}
 
 					if newReqMethod == "POST" {
-						reqType = http.MethodPost
+						UtilConf.reqType = http.MethodPost
 
-						uppercased1, exists2 := HandlePostValidation(parts, i)
-						if !exists2 {
-							pass = false
+						uppercased1, exists := HandlePostValidation(parts, i)
+						if !exists {
+							UtilConf.pass = false
 							continue
 						}
 
@@ -113,19 +98,19 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 							cleanedData, ok := HandleJsonDataInput(parts, i)
 							if !ok {
-								pass = false
+								UtilConf.pass = false
 								continue
 							}
 
 							// assign jsonData to cleaned
-							jsonData = cleanedData
+							UtilConf.jsonData = cleanedData
 
 						}
 
 						if uppercased1 == "-F" { // form mode
 							formParts, ok := HandleFormDataInput(parts, i)
 							if !ok {
-								pass = false
+								UtilConf.pass = false
 								continue
 							}
 
@@ -135,12 +120,12 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							data.Set(formParts[0], formParts[1])
 							enc := data.Encode() // encode
 
-							formBody = strings.NewReader(enc)
+							ReqConf.formBody = strings.NewReader(enc)
 						}
 
 					} else {
 						if newReqMethod == "GET" {
-							reqType = http.MethodGet
+							UtilConf.reqType = http.MethodGet
 						} else {
 							fmt.Println("invalid method type.")
 							continue
@@ -155,43 +140,43 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				client := http.Client{}
 				// cl, err := http.NewRequest(reqType, val, nil) // new request
-				if jsonData != "" && reqType == http.MethodPost {
-					cl, clErr = http.NewRequest(reqType, val, strings.NewReader(jsonData))
+				if UtilConf.jsonData != "" && UtilConf.reqType == http.MethodPost {
+					ReqConf.cl, ReqConf.clErr = http.NewRequest(UtilConf.reqType, val, strings.NewReader(UtilConf.jsonData))
 
 					// set content type to json after creating request
-					cl.Header.Add("Content-Type", "application/json")
+					ReqConf.cl.Header.Add("Content-Type", "application/json")
 					isJsonH = true
 				} else {
-					if jsonData == "" && reqType == http.MethodPost { // meaning that its form related request body data
-						cl, clErr = http.NewRequest(reqType, val, formBody)
+					if UtilConf.jsonData == "" && UtilConf.reqType == http.MethodPost { // meaning that its form related request body data
+						ReqConf.cl, ReqConf.clErr = http.NewRequest(UtilConf.reqType, val, ReqConf.formBody)
 
 						// setting appropriate header afterwards
-						cl.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+						ReqConf.cl.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 						isFormH = true
 					}
-					if reqType == http.MethodGet { // standard get method
-						cl, clErr = http.NewRequest(http.MethodGet, val, nil)
+					if UtilConf.reqType == http.MethodGet { // standard get method
+						ReqConf.cl, ReqConf.clErr = http.NewRequest(http.MethodGet, val, nil)
 					}
 
 				}
 
-				if clErr != nil {
-					fmt.Println(clErr)
+				if ReqConf.clErr != nil {
+					fmt.Println(ReqConf.clErr)
 					continue
 				}
 
-				if !pass {
+				if !UtilConf.pass {
 					continue
 				}
 
-				if len(reqHeaders) == 2 {
-					// attaching headers (only if it json data, or form data isnt included as it would override those headers.)
-					if !isJsonH && !isFormH {
-						cl.Header.Add(reqHeaders[0], reqHeaders[1])
+				if !isJsonH && !isFormH {
+					if len(ReqConf.reqHeaders) == 2 {
+						ReqConf.cl.Header.Add(ReqConf.reqHeaders[0], ReqConf.reqHeaders[1])
 					}
 				}
+				
 
-				resp, err2 := client.Do(cl) // send the request to the url provided
+				resp, err2 := client.Do(ReqConf.cl) // send the request to the url provided
 				if err2 != nil {
 					fmt.Println(err2.Error())
 					continue
@@ -230,7 +215,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				}
 
 			}
-
 		case "SPAM":
 			conf := InitSpamConfig()
 
