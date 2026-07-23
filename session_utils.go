@@ -195,6 +195,15 @@ type SpamConf struct {
 	reqCap    int
 }
 
+func InitSpamConfig() *SpamConf {
+	return &SpamConf{
+		reqBody: nil,
+		reqUrl: "",
+		reqMethod: "",
+		reqCap: 0,
+	}
+}
+
 // spam cmd modularization:
 
 func ExtractSpamUrl(parts []string, store *Data) bool {
@@ -214,8 +223,7 @@ func ExtractSpamUrl(parts []string, store *Data) bool {
 	return true
 }
 
-func HandleSpamGet(remainingArgs []string) bool {
-	conf := &SpamConf{}
+func HandleSpamGet(remainingArgs []string, conf *SpamConf) bool {
 
 	if len(remainingArgs) < 2 {
 		fmt.Println("not enough arguments, please consider: -C")
@@ -249,9 +257,7 @@ func HandleSpamGet(remainingArgs []string) bool {
 	return true
 }
 
-func HandleSpamPost(remainingArgs []string) bool {
-	conf := &SpamConf{}
-
+func HandleSpamPost(remainingArgs []string, conf *SpamConf) bool {
 	if len(remainingArgs) < 4 {
 		fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
 		return false

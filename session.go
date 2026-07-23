@@ -232,7 +232,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 			}
 
 		case "SPAM":
-			conf := &SpamConf{}
+			conf := InitSpamConfig()
 
 			ok := ExtractSpamUrl(parts, store) // conf.reqUrl would hold url
 			if !ok {
@@ -262,14 +262,14 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// get req
 				if strings.ToUpper(conf.reqMethod) == "GET" {
-					if ok := HandleSpamGet(remainingArgs); !ok {
+					if ok := HandleSpamGet(remainingArgs, conf); !ok {
 						continue
 					}
 				}
 
 				// post req
 				if strings.ToUpper(conf.reqMethod) == "POST" {
-					ok := HandleSpamPost(remainingArgs)
+					ok := HandleSpamPost(remainingArgs, conf)
 					if !ok {
 						continue
 					}
@@ -281,7 +281,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					fmt.Println("error initialising request.")
 					continue
 				}
-
+				
 				for i := range conf.reqCap {
 					go func(id int) {
 						msg, ok := NewWorker(req, id, &conf.client)
