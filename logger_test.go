@@ -19,6 +19,18 @@ func TestLogger(t *testing.T) {
 	}
 
 	client := http.Client{}
+	logConf := &LoggerParamConf{
+		Reqclient: &client,
+		Req: cl,
+		ReqBodySize: intPr(0),
+		AllowReqBody: boolre(),
+	}
 
-	Log(&client, cl, boolre(), intPr(100))
+	logConf2 := &LoggerConf{}
+
+	logConf2 = Log(logConf)
+
+	if logConf2.Reqerr != nil {
+		t.Fatal("found err:", logConf2.Reqerr.Error())
+	}
 }
