@@ -174,7 +174,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						ReqConf.cl.Header.Add(ReqConf.reqHeaders[0], ReqConf.reqHeaders[1])
 					}
 				}
-				
 
 				resp, err2 := client.Do(ReqConf.cl) // send the request to the url provided
 				if err2 != nil {
@@ -265,7 +264,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					fmt.Println("error initialising request.")
 					continue
 				}
-				
+
 				for i := range conf.reqCap {
 					go func(id int) {
 						msg, ok := NewWorker(req, id, &conf.client)

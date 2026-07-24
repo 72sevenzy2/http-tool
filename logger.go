@@ -10,19 +10,19 @@ import (
 
 // return config
 type LoggerConf struct {
-	Req *http.Response
+	Req     *http.Response
 	Reqtime time.Duration
 	Reqbody string
-	Reqlen *int
-	Reqerr error
+	Reqlen  *int
+	Reqerr  error
 }
 
 // for params
 type LoggerParamConf struct {
-	Reqclient *http.Client
-	Req *http.Request
+	Reqclient    *http.Client
+	Req          *http.Request
 	AllowReqBody *bool
-	ReqBodySize *int
+	ReqBodySize  *int
 }
 
 func Log(conf *LoggerParamConf) *LoggerConf {
@@ -30,11 +30,11 @@ func Log(conf *LoggerParamConf) *LoggerConf {
 	resp, err := conf.Reqclient.Do(conf.Req)
 	if err != nil {
 		return &LoggerConf{
-			Req: nil,
+			Req:     nil,
 			Reqtime: 0,
 			Reqbody: "",
-			Reqlen: intPtr(0),
-			Reqerr: err,
+			Reqlen:  intPtr(0),
+			Reqerr:  err,
 		}
 	}
 	end := time.Since(start)
@@ -55,8 +55,8 @@ func Log(conf *LoggerParamConf) *LoggerConf {
 	fmt.Println(newHeaders) // then display
 
 	// request body printing
-	var bodyprev string // body preview (string) var
-	var max *int // body size var
+	var bodyprev string  // body preview (string) var
+	var max *int         // body size var
 	var bodybytes []byte // body size (in bytes)
 
 	if *conf.AllowReqBody {
@@ -80,11 +80,10 @@ func Log(conf *LoggerParamConf) *LoggerConf {
 	final := len(bodybytes)
 
 	return &LoggerConf{
-		Req: resp,
+		Req:     resp,
 		Reqtime: end,
 		Reqbody: bodyprev,
-		Reqlen: &final,
-		Reqerr: nil,
-
+		Reqlen:  &final,
+		Reqerr:  nil,
 	}
 }

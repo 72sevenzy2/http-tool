@@ -20,9 +20,9 @@ func TestLogger(t *testing.T) {
 
 	client := http.Client{}
 	logConf := &LoggerParamConf{
-		Reqclient: &client,
-		Req: cl,
-		ReqBodySize: intPr(0),
+		Reqclient:    &client,
+		Req:          cl,
+		ReqBodySize:  intPr(0),
 		AllowReqBody: boolre(),
 	}
 

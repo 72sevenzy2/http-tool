@@ -85,35 +85,35 @@ func HandleDel(parts []string, store *Data) bool {
 
 // utility fields
 type TestUtilConf struct {
-	pass bool
-	reqType string
+	pass     bool
+	reqType  string
 	jsonData string
 }
 
 func InitTestUtilConf() *TestUtilConf {
 	return &TestUtilConf{
-		pass: true, // default
-		reqType: "",
+		pass:     true, // default
+		reqType:  "",
 		jsonData: "",
 	}
 }
 
 // request dependent fields
 type TestReqConf struct {
-	cl *http.Request
+	cl    *http.Request
 	clErr error
 
 	reqHeaders []string
-	formBody io.Reader
+	formBody   io.Reader
 }
 
 func InitTestReqConf() *TestReqConf {
 	return &TestReqConf{
-		cl: nil,
+		cl:    nil,
 		clErr: nil,
 
 		reqHeaders: nil,
-		formBody: nil,
+		formBody:   nil,
 	}
 }
 
@@ -233,10 +233,10 @@ type SpamConf struct {
 
 func InitSpamConfig() *SpamConf {
 	return &SpamConf{
-		reqBody: nil,
-		reqUrl: "",
+		reqBody:   nil,
+		reqUrl:    "",
 		reqMethod: "",
-		reqCap: 0,
+		reqCap:    0,
 	}
 }
 

@@ -17,7 +17,7 @@ import (
 type HeaderFlags []string
 
 func main() {
-	var headers HeaderFlags	
+	var headers HeaderFlags
 
 	// cli inputs
 	flag.Var(&headers, "H", "Header (key:value)")
@@ -91,13 +91,13 @@ func main() {
 	fmt.Println("bodyAllowed:", *allowedBody)
 
 	// logging
-	LoggingConf := &LoggerConf{} 	
+	LoggingConf := &LoggerConf{}
 
 	// logger parameters config
 	LogParamConf := &LoggerParamConf{
-		Reqclient: client,
-		Req: req,
-		ReqBodySize: bodySize,
+		Reqclient:    client,
+		Req:          req,
+		ReqBodySize:  bodySize,
 		AllowReqBody: allowedBody,
 	}
 
@@ -112,7 +112,7 @@ func main() {
 		return
 	}
 
-	defer LoggingConf.Req.Body.Close() 	
+	defer LoggingConf.Req.Body.Close()
 
 	if *stream {
 		fmt.Println("streaming live data:")
