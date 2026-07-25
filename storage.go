@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Data struct {
@@ -43,16 +44,15 @@ func (d *Data) Set(keyname any, value string) error {
 }
 
 // del func
-func (d *Data) Del(keyname any) error {
+func (d *Data) Del(keyname any) (string, bool) {
 	newk := Normalize(keyname)
 
-	// check if key exists first.
-	if _, v := d.data_storage[newk]; v {
-		delete(d.data_storage, newk)
-		return nil
+	if _, v := d.data_storage[newk]; !v {
+		return "key does not exist.", false
 	}
-	// else
-	return errors.New("key does not exist.")
+
+	delete(d.data_storage, newk)
+	return fmt.Sprintf("deleted key with value: %s", d.data_storage[newk]), true
 }
 
 // func to get all values from data_storage

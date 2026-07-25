@@ -8,38 +8,59 @@ import (
 	"time"
 )
 
-func intPtr(i int) *int { return &i } // returns *int
+// return config
+type LoggerConf struct {
+	Req     *http.Response
+	Reqtime time.Duration
+	Reqbody string
+	Reqlen  *int
+	Reqerr  error
+}
 
-func Log(v *http.Client, req *http.Request, bodyAllowed *bool, bodySize *int) (time.Duration, *http.Response, string, *int, error) {
+// for params
+type LoggerParamConf struct {
+	Reqclient    *http.Client
+	Req          *http.Request
+	AllowReqBody *bool
+	ReqBodySize  *int
+}
+
+func Log(conf *LoggerParamConf) *LoggerConf {
 	start := time.Now()
-	resp, err := v.Do(req)
+	resp, err := conf.Reqclient.Do(conf.Req)
 	if err != nil {
-		return 0, nil, "", intPtr(0), err
+		return &LoggerConf{
+			Req:     nil,
+			Reqtime: 0,
+			Reqbody: "",
+			Reqlen:  intPtr(0),
+			Reqerr:  err,
+		}
 	}
 	end := time.Since(start)
 
 	// fmt.Println("visited to:", req.URL.Path)
 	// fmt.Println("method:", req.Method)
-	fmt.Printf("visited to %s, with method %s", req.URL.Path, req.Method)
-	fmt.Println(" full url:", req.URL)
+	fmt.Printf("visited to %s, with method %s", conf.Req.URL.Path, conf.Req.Method)
+	fmt.Println(" full url:", conf.Req.URL)
 	// request query
-	if req.URL.RawQuery != "" {
-		fmt.Println("with query:", req.URL.RawQuery)
+	if conf.Req.URL.RawQuery != "" {
+		fmt.Println("with query:", conf.Req.URL.RawQuery)
 	}
 
 	// exlude sensitive headers
 	fmt.Println("request header details:")
-	newHeaders := req.Header.Clone()
+	newHeaders := conf.Req.Header.Clone()
 	newHeaders.Del("Authorization")
 	fmt.Println(newHeaders) // then display
 
 	// request body printing
-	var bodyprev string // body preview (string) var
-	var max *int // body size var
+	var bodyprev string  // body preview (string) var
+	var max *int         // body size var
 	var bodybytes []byte // body size (in bytes)
 
-	if *bodyAllowed {
-		max = bodySize
+	if *conf.AllowReqBody {
+		max = conf.ReqBodySize
 		bodybytes, err = io.ReadAll(resp.Body)
 		if err != nil {
 			fmt.Println(err.Error())
@@ -58,5 +79,11 @@ func Log(v *http.Client, req *http.Request, bodyAllowed *bool, bodySize *int) (t
 
 	final := len(bodybytes)
 
-	return end, resp, bodyprev, &final, nil
+	return &LoggerConf{
+		Req:     resp,
+		Reqtime: end,
+		Reqbody: bodyprev,
+		Reqlen:  &final,
+		Reqerr:  nil,
+	}
 }

@@ -31,192 +31,104 @@ func StartSession(b *bufio.Scanner, store *Data) {
 		switch upperInput {
 		// declare variables (can be to store headers, urls, etc)
 		case "VAR":
-			if len(parts) < 3 || len(parts) > 3 { // validate arguments
-				fmt.Println("please consider the correct format: var <KeyName> <KeyValue>")
-			}
-
-			err := store.Set(parts[1], parts[2])
-			if err != nil {
-				fmt.Println(err.Error())
+			ok := HandleVar(parts, store)
+			if !ok {
 				continue
 			}
-			fmt.Println("successful.")
-			continue
 		case "GET":
-			if len(parts) < 2 || len(parts) > 2 {
-				fmt.Println("please use the correct format: get <KeyName>")
+			ok := HandleGet(parts, store)
+			if !ok {
 				continue
 			}
-
-			val, err := store.Get(parts[1])
-			if err != nil {
-				fmt.Println(err.Error())
-				continue
-			}
-			fmt.Println(val)
 
 		case "DEL":
-			if len(parts) < 2 || len(parts) > 2 { // validate if parts[1] (key) only is included in input
-				fmt.Println("please use the correct format: del <KeyName>")
+			ok := HandleDel(parts, store)
+			if !ok {
 				continue
 			}
-
-			err := store.Del(parts[1])
-			if err != nil {
-				fmt.Println(err.Error())
-				continue
-			}
-
-			fmt.Println("deleted key.")
-			continue
 
 			// actual api testing logic (GET only for now)
 		case "TEST":
-			if len(parts) < 2 { // validate arguments before continuing (other it will panic)
-				fmt.Println("variable as second argument does not exit, consider setting a var.")
+			val, ok := HandleTestValdiation(parts, store)
+			if !ok {
 				continue
-			} else {
-				val, err := store.Get(parts[1]) // check if parts[1] exists as a var first
-				if err != nil {
-					fmt.Println(err.Error())
-					continue
-				}
+			}
 
-				//  utility variables
-				var (
-					pass    bool // determine whether final output block runs
-					reqType string
-					// bodyData map[string]string
-					jsonData string
-				)
-				pass = true
+			//  utility variables
+			UtilConf := InitTestUtilConf()
+			// request dependent variables
 
-				// request dependent variables
-				var (
-					cl    *http.Request
-					clErr error
+			ReqConf := InitTestReqConf()
+			// default request (GET) so cl does not stay nil if user were not to pass -X
+			ReqConf.cl, ReqConf.clErr = http.NewRequest(http.MethodGet, val, nil)
+			// clErr is handled below, after flags are parsed and appropriate requests are made.
 
-					// for appending headers
-					reqHeaders []string // reqHeaders being globally accessed by this scope, so headers can be assigned after initialising request.
+			// parse header arguments
+			for i := range parts {
+				upc := strings.ToUpper(parts[i]) // normalize "-h" to all uppercase
 
-					formBody io.Reader // to hold form data
-				)
-
-				// default request (GET) so cl does not stay nil if user were not to pass -X
-				cl, clErr = http.NewRequest(http.MethodGet, val, nil)
-				// clErr is handled below, after flags are parsed and appropriate requests are made.
-
-				// parse header arguments
-				for i := range parts {
-					upc := strings.ToUpper(parts[i]) // normalize "-h" to all uppercase
-
-					if upc == "-H" {
-						// check if header values exist
-						if i+1 >= len(parts) {
-							fmt.Println("missing header values.")
-							pass = false
-							continue
-						}
-
-						reqHeaders = strings.SplitN(parts[i+1], ":", 2) // splits headers as:
-						// for example: header1:value, splitN() would split it so:
-						// map[string]string{
-						// 	"header1",
-						//  "value",
-						// }
-
-						if len(reqHeaders) < 2 || len(reqHeaders) > 2 { // validate length of headers or it will panic during execution
-							fmt.Println("please include both header name and value.")
-							pass = false
-							break
-						}
-						continue // skip
-
-						// refactored above ^ (keeping this block for future reference)
-						// if reqHeaders[0] == "" && reqHeaders[1] == "" {
-						// 	// cl.Header.Add(headers[0], headers[1])
-						// 	continue
-						// }
+				if upc == "-H" {
+					headerSlice, ok := HandleHeaderAppending(parts, i, upc)
+					if !ok {
+						UtilConf.pass = false
+						continue
 					}
 
-					// to check if argument is for req methods
-					if upc == "-X" {
+					ReqConf.reqHeaders = headerSlice // store headerSLice contents which were extracted.
+				}
 
-						// validate if values exist (GET or POST)
-						if i+1 >= len(parts) {
-							fmt.Println("missing argument values, consider either POST or GET.")
-							pass = false
+				// to check if argument is for req methods
+				if upc == "-X" {
+					newReqMethod, exists := HandleRequestMethodValidation(parts, i)
+					if !exists {
+						UtilConf.pass = false
+						continue
+					}
+
+					if newReqMethod == "POST" {
+						UtilConf.reqType = http.MethodPost
+
+						uppercased1, exists := HandlePostValidation(parts, i)
+						if !exists {
+							UtilConf.pass = false
 							continue
 						}
 
-						newReq := strings.ToUpper(parts[i+1])
+						if uppercased1 == "-D" { // for normal json data
 
-						if newReq == "POST" {
-							reqType = http.MethodPost
-
-							// validate if request body flag also exists aswell as its data
-							if i+2 >= len(parts) {
-								fmt.Println("missing request body flag, consider: -d [data]")
-								pass = false
+							cleanedData, ok := HandleJsonDataInput(parts, i)
+							if !ok {
+								UtilConf.pass = false
 								continue
 							}
 
-							uppercased1 := strings.ToUpper(parts[i+2]) // normalize parts[i+2] to uppercase upon input
+							// assign jsonData to cleaned
+							UtilConf.jsonData = cleanedData
 
-							if uppercased1 == "-D" { // for normal json data
+						}
 
-								// validate if values exist
-								if i+3 >= len(parts) {
-									fmt.Println("please include actual data in json format.")
-									pass = false
-									continue
-								}
-
-								// collect all input after parts[i+3]
-								// whilst also removing "\"
-								cleaned := strings.ReplaceAll(strings.ReplaceAll(strings.Join(parts[i+3:], ""), " ", ""), "\\", "")
-
-								// assign jsonData to cleaned
-								jsonData = cleaned
-
+						if uppercased1 == "-F" { // form mode
+							formParts, ok := HandleFormDataInput(parts, i)
+							if !ok {
+								UtilConf.pass = false
+								continue
 							}
 
-							if uppercased1 == "-F" { // form mode
-								if i+3 >= len(parts) {
-									fmt.Println("please include the necessary form data with format: 'title:value'")
-									pass = false
-									continue
-								}
+							// appending the form values
+							data := url.Values{}
 
-								formParts := strings.SplitN(parts[i+3], ":", 2) // needs to be in a format like so:
-								// "title:value", and strings.SplitN(...) would return:
-								// map[string]string{
-								//		"title": "value",
-								// }
+							data.Set(formParts[0], formParts[1])
+							enc := data.Encode() // encode
 
-								// validate if formParts is of correct length now (or will panic)
-								if len(formParts) < 2 || len(formParts) > 2 {
-									fmt.Println("please use the correct format.")
-									pass = false
-									continue
-								}
+							ReqConf.formBody = strings.NewReader(enc)
+						}
 
-								// appending the form values
-								data := url.Values{}
-
-								data.Set(formParts[0], formParts[1])
-								enc := data.Encode() // encode
-
-								formBody = strings.NewReader(enc)
-							}
-
+					} else {
+						if newReqMethod == "GET" {
+							UtilConf.reqType = http.MethodGet
 						} else {
-							if newReq == "GET" {
-								reqType = http.MethodGet
-							} else {
-								fmt.Println("invalid method type.")
-								continue
-							}
+							fmt.Println("invalid method type.")
+							continue
 						}
 					}
 
@@ -228,43 +140,42 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				client := http.Client{}
 				// cl, err := http.NewRequest(reqType, val, nil) // new request
-				if jsonData != "" && reqType == http.MethodPost {
-					cl, clErr = http.NewRequest(reqType, val, strings.NewReader(jsonData))
+				if UtilConf.jsonData != "" && UtilConf.reqType == http.MethodPost {
+					ReqConf.cl, ReqConf.clErr = http.NewRequest(UtilConf.reqType, val, strings.NewReader(UtilConf.jsonData))
 
 					// set content type to json after creating request
-					cl.Header.Add("Content-Type", "application/json")
+					ReqConf.cl.Header.Add("Content-Type", "application/json")
 					isJsonH = true
 				} else {
-					if jsonData == "" && reqType == http.MethodPost { // meaning that its form related request body data
-						cl, clErr = http.NewRequest(reqType, val, formBody)
+					if UtilConf.jsonData == "" && UtilConf.reqType == http.MethodPost { // meaning that its form related request body data
+						ReqConf.cl, ReqConf.clErr = http.NewRequest(UtilConf.reqType, val, ReqConf.formBody)
 
 						// setting appropriate header afterwards
-						cl.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+						ReqConf.cl.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 						isFormH = true
 					}
-					if reqType == http.MethodGet { // standard get method
-						cl, clErr = http.NewRequest(http.MethodGet, val, nil)
+					if UtilConf.reqType == http.MethodGet { // standard get method
+						ReqConf.cl, ReqConf.clErr = http.NewRequest(http.MethodGet, val, nil)
 					}
 
 				}
 
-				if clErr != nil {
-					fmt.Println(clErr)
+				if ReqConf.clErr != nil {
+					fmt.Println(ReqConf.clErr)
 					continue
 				}
 
-				if !pass {
+				if !UtilConf.pass {
 					continue
 				}
 
-				if len(reqHeaders) == 2 {
-					// attaching headers (only if json body data is not included)
-					if !isJsonH && !isFormH {
-						cl.Header.Add(reqHeaders[0], reqHeaders[1])
+				if !isJsonH && !isFormH {
+					if len(ReqConf.reqHeaders) == 2 {
+						ReqConf.cl.Header.Add(ReqConf.reqHeaders[0], ReqConf.reqHeaders[1])
 					}
 				}
 
-				resp, err2 := client.Do(cl) // send the request to the url provided
+				resp, err2 := client.Do(ReqConf.cl) // send the request to the url provided
 				if err2 != nil {
 					fmt.Println(err2.Error())
 					continue
@@ -303,30 +214,85 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				}
 
 			}
+		case "SPAM":
+			conf := InitSpamConfig()
+
+			ok := ExtractSpamUrl(parts, store) // conf.reqUrl would hold url
+			if !ok {
+				continue
+			}
+
+			// needed defaults
+			req, reqErr := http.NewRequest(http.MethodGet, conf.reqUrl, nil)
+			conf.reqCap = 5 // N amount of requests that are to be sent
+
+			if len(parts) <= 2 {
+				fmt.Println("please include a request method (-x [method])")
+				continue
+			}
+			uc := strings.ToUpper(parts[2])
+			if uc == "-X" {
+
+				conf.reqMethod = parts[3]
+
+				if strings.ToUpper(conf.reqMethod) != "GET" && strings.ToUpper(conf.reqMethod) != "POST" {
+					fmt.Println("feature is only compatible with GET/POST requests currently.")
+					continue
+				}
+
+				// parsing remaining parts after parts[3]
+				remainingArgs := parts[4:]
+
+				// get req
+				if strings.ToUpper(conf.reqMethod) == "GET" {
+					if ok := HandleSpamGet(remainingArgs, conf); !ok {
+						continue
+					}
+				}
+
+				// post req
+				if strings.ToUpper(conf.reqMethod) == "POST" {
+					ok := HandleSpamPost(remainingArgs, conf)
+					if !ok {
+						continue
+					}
+				}
+
+				// initialising final req
+				req, reqErr = http.NewRequest(conf.reqMethod, conf.reqUrl, conf.reqBody)
+				if reqErr != nil {
+					fmt.Println("error initialising request.")
+					continue
+				}
+
+				res := make(chan *Result) // one channel for all workers
+				for i := range conf.reqCap {
+					go func(id int) {
+						NewWorker(req, id, &conf.client, res)
+					}(i)
+				}
+
+				for range conf.reqCap {
+					r := <-res // receiving results
+
+					if r.Error != nil {
+						r.Err()
+						continue
+					}
+
+					// body
+					r.DisplayBody()
+				}
+			}
 
 		case "FETCH":
-			if len(parts) > 1 {
-				fmt.Println("invalid fetch format: only run <FETCH> to retrieve all set variables.")
+			ok := HandleFetch(parts, store)
+			if !ok { //
 				continue
-			}
-
-			vals, ok := store.GetAll()
-			if !ok {
-				fmt.Println("no variables set.")
-				continue
-			}
-			for v, i := range vals {
-				fmt.Println(i, v) // key first then value
 			}
 
 		case "HELP":
-			fmt.Println("usage:")
-			fmt.Println("var <VarName> <Value>")
-			fmt.Println("to retrieve values:")
-			fmt.Println("get <VarName>")
-			fmt.Println("to test API's:")
-			fmt.Println("test <VarName> -H content-type:application -X post -D { 'name': 'name' } or -X post -F <formTitle:formValue>")
-			fmt.Println("though flags shown above are optional, but make sure <VarName> is a valid url.")
+			DisplayCmds()
 			continue
 		// for exiting
 		case "EXIT":
