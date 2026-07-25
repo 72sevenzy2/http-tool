@@ -125,13 +125,13 @@ func main() {
 
 		// checking if request failed if yes then log
 		if LoggingConf.Req.StatusCode >= 400 { // anything over 400 means request wasnt successful
-			fmt.Println("request failed with status:", LoggingConf.Req.Status)
+			fmt.Println("request failed with status:", LoggingConf.DisplayReqStatus())
 		}
 
 		// outputting
+		fmt.Println("request status:", LoggingConf.DisplayReqStatus())
 
-		fmt.Println("status:", LoggingConf.Req.Status)
-		fmt.Println("latency:", LoggingConf.Reqtime) // printing latency
+		LoggingConf.DisplayReqLatency()
 
 		fmt.Println("\nheaders:")
 		for k, v := range LoggingConf.Req.Header {
@@ -144,6 +144,7 @@ func main() {
 
 		LoggingConf.DisplayReqBody()
 
-		fmt.Println("logged request body with size", *LoggingConf.Reqlen)
+		LoggingConf.DisplayReqBodyLen()
+
 	}
 }

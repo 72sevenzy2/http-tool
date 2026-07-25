@@ -17,7 +17,19 @@ type LoggerConf struct {
 	Reqerr  error
 }
 
-// small utils
+// small utils for LoggerConf
+
+func (b *LoggerConf) DisplayReqStatus() string {
+	return b.Req.Status
+}
+
+func (b *LoggerConf) DisplayReqLatency() {
+	fmt.Println("request latency:", b.Reqtime)
+}
+
+func (b *LoggerConf) DisplayReqBodyLen() {
+	fmt.Println("request body length:", b.Reqlen)
+}
 
 func (b *LoggerConf) DisplayReqBody() {
 	fmt.Println(b.Reqbody)
