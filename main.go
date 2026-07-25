@@ -17,7 +17,7 @@ import (
 type HeaderFlags []string
 
 func main() {
-	var headers HeaderFlags	
+	var headers HeaderFlags
 
 	// cli inputs
 	flag.Var(&headers, "H", "Header (key:value)")
@@ -91,22 +91,32 @@ func main() {
 	fmt.Println("bodyAllowed:", *allowedBody)
 
 	// logging
-	end, resp, bodyprev, bodysize, err := Log(client, req, allowedBody, bodySize)
+	LoggingConf := &LoggerConf{}
 
-	if bodyprev == "" {
+	// logger parameters config
+	LogParamConf := &LoggerParamConf{
+		Reqclient:    client,
+		Req:          req,
+		ReqBodySize:  bodySize,
+		AllowReqBody: allowedBody,
+	}
+
+	LoggingConf = Log(LogParamConf)
+
+	if LoggingConf.Reqbody == "" {
 		fmt.Println("body is empty")
 	}
 
-	if err != nil {
-		log.Fatal(err.Error())
+	if LoggingConf.Reqerr != nil {
+		log.Fatal(LoggingConf.Reqerr.Error())
 		return
 	}
 
-	defer resp.Body.Close() // important as not closing resp.Body would lead to performance issues + leaks, aswell as its apart of the ReadCloser interface so it has be closed.
+	defer LoggingConf.Req.Body.Close()
 
 	if *stream {
 		fmt.Println("streaming live data:")
-		_, err := io.Copy(os.Stdout, resp.Body)
+		_, err := io.Copy(os.Stdout, LoggingConf.Req.Body)
 		if err != nil {
 			log.Fatal(err.Error())
 			return
@@ -114,17 +124,17 @@ func main() {
 	} else {
 
 		// checking if request failed if yes then log
-		if resp.StatusCode >= 400 { // anything over 400 means request wasnt successful
-			fmt.Println("request failed with status:", resp.Status)
+		if LoggingConf.Req.StatusCode >= 400 { // anything over 400 means request wasnt successful
+			fmt.Println("request failed with status:", LoggingConf.Req.Status)
 		}
 
 		// outputting
 
-		fmt.Println("status:", resp.Status)
-		fmt.Println("latency:", end) // printing latency
+		fmt.Println("status:", LoggingConf.Req.Status)
+		fmt.Println("latency:", LoggingConf.Reqtime) // printing latency
 
 		fmt.Println("\nheaders:")
-		for k, v := range resp.Header {
+		for k, v := range LoggingConf.Req.Header {
 			fmt.Println(k+":", v) // key:value output style for headers
 		}
 
@@ -132,8 +142,8 @@ func main() {
 
 		// var format bytes.Buffer // pretty printed body will be stored here before outputted
 
-		fmt.Println(bodyprev)
+		fmt.Println(LoggingConf.Reqbody)
 
-		fmt.Println("logged request body with size", *bodysize)
+		fmt.Println("logged request body with size", *LoggingConf.Reqlen)
 	}
 }

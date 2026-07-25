@@ -9,9 +9,6 @@
 <h2 align="center">
     <code> go --v </code>
 </h2>
-
-<br>
-<h3 align="center">(project only supports post/get requests for now, but will extend later on).</h3>
 <br>
 <h1 align="center">get started:</h2>
 
@@ -27,7 +24,7 @@
 <h3 align="center">
     <code> go run . [-x POST/GET] [URL] </code>
 </h3>
-
+<h4 align="center">(only works with post and get for now.)</h4>
 <br>
 
 <h2 align="center">with streaming enabled: (streaming gives live response data back.)</h2>
@@ -119,4 +116,4 @@
 <h4 align="center">and make sure you use the exact format as shown, (title:value).</h4>
 <h4 align="center">also important, you can include multiple flag options at once when testing (except -F and -D for -x POST).</h4>
 
-<h4 align="center">important to note, VarName should be a variable assigned with a valid url, however for the purpose of session mode, you can store headers/body data/urls in variables to utilise them when running the TEST cmd.</h4>
+<h4 align="center">VarName should be a variable assigned with a valid url, however for the purpose of session mode, you can store headers/body data/urls in variables to utilise them when running the TEST cmd.</h4>
