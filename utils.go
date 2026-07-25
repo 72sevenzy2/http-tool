@@ -26,7 +26,7 @@ func Validate(args []string) error {
 }
 
 // small helper func to return integer pointers.
-func intPtr(i int) *int { return &i } // returns *int
+func IntPtr(i int) *int { return &i } // returns *int
 
 // func for adding headers
 func AddHeaders(req *http.Request, args HeaderFlags) error {

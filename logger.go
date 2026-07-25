@@ -8,13 +8,12 @@ import (
 	"time"
 )
 
-func intPtr(i int) *int { return &i } // returns *int
 
 func Log(v *http.Client, req *http.Request, bodyAllowed *bool, bodySize *int) (time.Duration, *http.Response, string, *int, error) {
 	start := time.Now()
 	resp, err := v.Do(req)
 	if err != nil {
-		return 0, nil, "", intPtr(0), err
+		return 0, nil, "", IntPtr(0), err
 	}
 	end := time.Since(start)
 
