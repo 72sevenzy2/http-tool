@@ -213,13 +213,44 @@ func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
 
 // spam cmd utils:
 
-func NewWorker(req *http.Request, id int, client *http.Client) (string, bool) {
-	_, err := client.Do(req)
+// worker response format
+type Result struct {
+	Body  string
+	Error error
+}
+
+// util funcs
+
+func (b *Result) Err() { // display err
+	fmt.Println(b.Error)
+}
+
+func (b *Result) DisplayBody() { // for body
+	fmt.Println(b.Body)
+}
+
+func NewWorker(req *http.Request, id int, client *http.Client, results chan<- *Result) {
+	// todo: extract returned http.response and send back to main gorountine.
+	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Sprintf("worker number %d had failed.", id), false
+		results <- &Result{
+			Body:  "",
+			Error: err,
+		}
 	}
 
-	return fmt.Sprint("worker finished with id:", id), true
+	body, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	if err != nil { // no body
+		results <- &Result{
+			Body:  "",
+			Error: err,
+		}
+	}
+	results <- &Result{
+		Body:  string(body),
+		Error: nil,
+	}
 }
 
 type SpamConf struct {

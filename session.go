@@ -265,16 +265,23 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					continue
 				}
 
+				res := make(chan *Result) // one channel for all workers
 				for i := range conf.reqCap {
 					go func(id int) {
-						msg, ok := NewWorker(req, id, &conf.client)
-						if !ok {
-							str := fmt.Sprintf("worker with id %d failed to send request.", id)
-							fmt.Println(str)
-							return // exit
-						}
-						fmt.Println(msg)
+						NewWorker(req, id, &conf.client, res)
 					}(i)
+				}
+
+				for range conf.reqCap {
+					r := <-res // receiving results
+
+					if r.Error != nil {
+						r.Err()
+						continue
+					}
+
+					// body
+					r.DisplayBody()
 				}
 			}
 
