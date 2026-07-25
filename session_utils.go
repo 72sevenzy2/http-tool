@@ -229,11 +229,11 @@ func (b *Result) DisplayBody() { // for body
 	fmt.Println(b.Body)
 }
 
-func NewWorker(req *http.Request, id int, client *http.Client, results chan<- *Result) {
+func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Result) {
 	// todo: extract returned http.response and send back to main gorountine.
 	resp, err := client.Do(req)
 	if err != nil {
-		results <- &Result{
+		results <- Result{
 			Body:  "",
 			Error: err,
 		}
@@ -242,12 +242,12 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- *R
 	body, err := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if err != nil { // no body
-		results <- &Result{
+		results <- Result{
 			Body:  "",
 			Error: err,
 		}
 	}
-	results <- &Result{
+	results <- Result{
 		Body:  string(body),
 		Error: nil,
 	}

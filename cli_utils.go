@@ -53,7 +53,3 @@ func Normalize(keyname any) string {
 		return ""
 	}
 }
-<<<<<<< HEAD:utils.go
-=======
-
->>>>>>> 87530e824dbe65e7a65c0a3f63b393caa7a92bb3:cli_utils.go

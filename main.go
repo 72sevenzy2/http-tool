@@ -108,7 +108,7 @@ func main() {
 	}
 
 	if LoggingConf.Reqerr != nil {
-		log.Fatal(LoggingConf.Reqerr.Error())
+		LoggingConf.Err()
 		return
 	}
 
@@ -142,7 +142,7 @@ func main() {
 
 		// var format bytes.Buffer // pretty printed body will be stored here before outputted
 
-		fmt.Println(LoggingConf.Reqbody)
+		LoggingConf.DisplayReqBody()
 
 		fmt.Println("logged request body with size", *LoggingConf.Reqlen)
 	}

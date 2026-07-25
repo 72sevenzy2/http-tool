@@ -265,7 +265,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					continue
 				}
 
-				res := make(chan *Result) // one channel for all workers
+				res := make(chan Result) // one channel for all workers
 				for i := range conf.reqCap {
 					go func(id int) {
 						NewWorker(req, id, &conf.client, res)

@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-<<<<<<< HEAD
-=======
 // return config
 type LoggerConf struct {
 	Req     *http.Response
@@ -18,7 +16,17 @@ type LoggerConf struct {
 	Reqlen  *int
 	Reqerr  error
 }
->>>>>>> 87530e824dbe65e7a65c0a3f63b393caa7a92bb3
+
+// small utils
+
+func (b *LoggerConf) DisplayReqBody() {
+	fmt.Println(b.Reqbody)
+}
+
+func (b *LoggerConf) Err() {
+	fmt.Println(b.Reqerr.Error())
+}
+
 
 // for params
 type LoggerParamConf struct {
@@ -32,17 +40,13 @@ func Log(conf *LoggerParamConf) *LoggerConf {
 	start := time.Now()
 	resp, err := conf.Reqclient.Do(conf.Req)
 	if err != nil {
-<<<<<<< HEAD
-		return 0, nil, "", IntPtr(0), err
-=======
 		return &LoggerConf{
 			Req:     nil,
 			Reqtime: 0,
 			Reqbody: "",
-			Reqlen:  intPtr(0),
+			Reqlen:  IntPtr(0),
 			Reqerr:  err,
-		}
->>>>>>> 87530e824dbe65e7a65c0a3f63b393caa7a92bb3
+	 	}
 	}
 	end := time.Since(start)
 
