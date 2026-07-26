@@ -272,7 +272,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					}(i)
 				}
 
-				for range conf.reqCap {
+				for i := range conf.reqCap {
 					r := <-res // receiving results
 
 					if r.Error != nil {
@@ -280,8 +280,21 @@ func StartSession(b *bufio.Scanner, store *Data) {
 						continue
 					}
 
-					// body
+					fmt.Printf("result number %d, successfuly retrieved.", i)
+					fmt.Println("\n request body:")
 					r.DisplayBody()
+
+					fmt.Println("\n request headers:")
+					r.DisplayReqHeaders()
+
+					fmt.Println("\n request path:")
+					r.DisplayReqPath()
+
+					fmt.Println("\n request method:")
+					r.DisplayReqMethod()
+
+					fmt.Println("\n request status code:")
+					r.DisplayReqStatusCode()
 				}
 			}
 

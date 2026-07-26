@@ -232,8 +232,27 @@ func (b Result) Err() { // display err
 
 func (b Result) DisplayBody() { // for body
 	fmt.Println(b.Body)
-} // todo: add additional methods for new fields
+}
 
+func (b Result) DisplayReqHeaders() {
+	for k, v := range b.ReqHeaders {
+		fmt.Println(k, v)
+	}
+}
+
+func (b Result) DisplayReqPath() {
+	fmt.Println(b.ReqPath)
+}
+
+func (b Result) DisplayReqStatusCode() {
+	fmt.Println(b.ReqStatusCode)
+}
+
+func (b Result) DisplayReqMethod() {
+	fmt.Println(b.ReqMethod)
+}
+
+// todo: switch parameters to config struct
 func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Result) {
 	resp, err := client.Do(req)
 
@@ -246,6 +265,7 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Re
 			ReqHeaders:    clonedHeaders,
 			Body:          "",
 			Error:         err,
+			ReqPath:       resp.Request.URL.Path,
 			ReqStatusCode: resp.StatusCode,
 			ReqMethod:     resp.Request.Method,
 		}
@@ -258,6 +278,7 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Re
 			ReqHeaders:    clonedHeaders,
 			Body:          "",
 			Error:         err,
+			ReqPath:       resp.Request.URL.Path,
 			ReqStatusCode: resp.StatusCode,
 			ReqMethod:     resp.Request.Method,
 		}
@@ -266,6 +287,7 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Re
 		ReqHeaders:    clonedHeaders,
 		Body:          string(body),
 		Error:         nil,
+		ReqPath:       resp.Request.URL.Path,
 		ReqStatusCode: resp.StatusCode,
 		ReqMethod:     resp.Request.Method,
 	}
