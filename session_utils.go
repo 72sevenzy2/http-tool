@@ -213,29 +213,41 @@ func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
 
 // spam cmd utils:
 
+// todo: extend Result with additional response fields.
 // worker response format
 type Result struct {
-	Body  string
-	Error error
+	ReqHeaders    http.Header // http.Header is map[string][]string
+	Body          string
+	Error         error
+	ReqPath       string
+	ReqStatusCode int
+	ReqMethod     string
 }
 
 // util funcs
 
-func (b *Result) Err() { // display err
+func (b Result) Err() { // display err
 	fmt.Println(b.Error)
 }
 
-func (b *Result) DisplayBody() { // for body
+func (b Result) DisplayBody() { // for body
 	fmt.Println(b.Body)
-}
+} // todo: add additional methods for new fields
 
 func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Result) {
-	// todo: extract returned http.response and send back to main gorountine.
 	resp, err := client.Do(req)
+
+	// shadowing sensitive header values.
+	clonedHeaders := resp.Header.Clone()
+	clonedHeaders.Del("authorization")
+
 	if err != nil {
 		results <- Result{
-			Body:  "",
-			Error: err,
+			ReqHeaders:    clonedHeaders,
+			Body:          "",
+			Error:         err,
+			ReqStatusCode: resp.StatusCode,
+			ReqMethod:     resp.Request.Method,
 		}
 	}
 
@@ -243,13 +255,19 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Re
 	defer resp.Body.Close()
 	if err != nil { // no body
 		results <- Result{
-			Body:  "",
-			Error: err,
+			ReqHeaders:    clonedHeaders,
+			Body:          "",
+			Error:         err,
+			ReqStatusCode: resp.StatusCode,
+			ReqMethod:     resp.Request.Method,
 		}
 	}
 	results <- Result{
-		Body:  string(body),
-		Error: nil,
+		ReqHeaders:    clonedHeaders,
+		Body:          string(body),
+		Error:         nil,
+		ReqStatusCode: resp.StatusCode,
+		ReqMethod:     resp.Request.Method,
 	}
 }
 

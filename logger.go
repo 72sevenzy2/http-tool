@@ -19,23 +19,23 @@ type LoggerConf struct {
 
 // small utils for LoggerConf
 
-func (b *LoggerConf) DisplayReqStatus() string {
+func (b LoggerConf) DisplayReqStatus() string {
 	return b.Req.Status
 }
 
-func (b *LoggerConf) DisplayReqLatency() {
+func (b LoggerConf) DisplayReqLatency() {
 	fmt.Println("request latency:", b.Reqtime)
 }
 
-func (b *LoggerConf) DisplayReqBodyLen() {
+func (b LoggerConf) DisplayReqBodyLen() {
 	fmt.Println("request body length:", b.Reqlen)
 }
 
-func (b *LoggerConf) DisplayReqBody() {
+func (b LoggerConf) DisplayReqBody() {
 	fmt.Println(b.Reqbody)
 }
 
-func (b *LoggerConf) Err() {
+func (b LoggerConf) Err() {
 	fmt.Println(b.Reqerr.Error())
 }
 
