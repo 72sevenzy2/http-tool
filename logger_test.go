@@ -5,12 +5,10 @@ import (
 	"testing"
 )
 
-func boolre() *bool {
+func BoolPtr() *bool {
 	b := true
 	return &b
 }
-
-func intPr(i int) *int { return &i }
 
 func TestLogger(t *testing.T) {
 	cl, err := http.NewRequest("GET", "https://jsonplaceholder.typicode.com/posts/1", nil)
@@ -22,8 +20,8 @@ func TestLogger(t *testing.T) {
 	logConf := &LoggerParamConf{
 		Reqclient:    &client,
 		Req:          cl,
-		ReqBodySize:  intPr(0),
-		AllowReqBody: boolre(),
+		ReqBodySize:  IntPtr(0),
+		AllowReqBody: BoolPtr(),
 	}
 
 	logConf2 := &LoggerConf{}
