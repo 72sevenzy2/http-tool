@@ -213,7 +213,6 @@ func HandleFormDataInput(parts []string, partsIndex int) ([]string, bool) {
 
 // spam cmd utils:
 
-// todo: extend Result with additional response fields.
 // worker response format
 type Result struct {
 	ReqHeaders    http.Header // http.Header is map[string][]string
@@ -252,16 +251,23 @@ func (b Result) DisplayReqMethod() {
 	fmt.Println(b.ReqMethod)
 }
 
-// todo: switch parameters to config struct
-func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Result) {
-	resp, err := client.Do(req)
+// config struct for NewWorker() parameters
+type WorkerConfig struct {
+	Req     *http.Request
+	Client  *http.Client
+	Results chan<- Result
+	Id      int
+}
+
+func NewWorker(v *WorkerConfig) {
+	resp, err := v.Client.Do(v.Req)
 
 	// shadowing sensitive header values.
 	clonedHeaders := resp.Header.Clone()
 	clonedHeaders.Del("authorization")
 
 	if err != nil {
-		results <- Result{
+		v.Results <- Result{
 			ReqHeaders:    clonedHeaders,
 			Body:          "",
 			Error:         err,
@@ -274,7 +280,7 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Re
 	body, err := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if err != nil { // no body
-		results <- Result{
+		v.Results <- Result{
 			ReqHeaders:    clonedHeaders,
 			Body:          "",
 			Error:         err,
@@ -283,7 +289,7 @@ func NewWorker(req *http.Request, id int, client *http.Client, results chan<- Re
 			ReqMethod:     resp.Request.Method,
 		}
 	}
-	results <- Result{
+	v.Results <- Result{
 		ReqHeaders:    clonedHeaders,
 		Body:          string(body),
 		Error:         nil,

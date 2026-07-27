@@ -93,7 +93,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							UtilConf.pass = false
 							continue
 						}
-
+					
 						if uppercased1 == "-D" { // for normal json data
 
 							cleanedData, ok := HandleJsonDataInput(parts, i)
@@ -261,14 +261,22 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				// initialising final req
 				req, reqErr = http.NewRequest(conf.reqMethod, conf.reqUrl, conf.reqBody)
 				if reqErr != nil {
-					fmt.Println("error initialising request.")
+					fmt.Println(reqErr.Error())
 					continue
 				}
 
-				res := make(chan Result) // one channel for all workers
+				res := make(chan Result) // 1 channel for all workers
+
+				// NewWorker() param conf
+				WorkerConf := &WorkerConfig{
+					Req: req,
+					Client: &conf.client,
+					Results: res,
+				}
+
 				for i := range conf.reqCap {
 					go func(id int) {
-						NewWorker(req, id, &conf.client, res)
+						NewWorker(WorkerConf)
 					}(i)
 				}
 
