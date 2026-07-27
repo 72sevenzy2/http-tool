@@ -108,7 +108,22 @@
     <code> TEST [VarName] [-x POST  -F [title:value]] </code>
 </h3>
 <br>
-<h3 align="center">and finally, to exit:</h3>
+
+<h2 align="center">sending multiple requests:</h2>
+
+<h3 align="center">for post request:</h3>
+<h3 align="center">
+    <code> SPAM [VarName] [-x POST] [-c 10] [-d {"name": "alex"}] </code>
+</h3>
+<h4 align="center">be sure to include the "-c" flag as it is the number of requests that are to be sent to the api, with the json data that should be provided in the "-d" flag. </h4>
+
+<h3 align="center">and for get requests:</h3>
+<h3 align="center">
+    <code> SPAM [VarName] [-x GET] [-c 10] </code>
+</h3>
+<h4 align="center">important to note that you can include an variable as the argument to the "-c" flag, though make sure the variables value is an integer.</h4>
+<br>
+<h2 align="center">to exit session mode:</h3>
 <h3 align="center">
     <code> EXIT </code>
 </h3>
@@ -116,4 +131,4 @@
 <h4 align="center">and make sure you use the exact format as shown, (title:value).</h4>
 <h4 align="center">also important, you can include multiple flag options at once when testing (except -F and -D for -x POST).</h4>
 
-<h4 align="center">VarName should be a variable assigned with a valid url, however for the purpose of session mode, you can store headers/body data/urls in variables to utilise them when running the TEST cmd.</h4>
+<h4 align="center">VarName should be a variable assigned with a valid url, however for session mode, you can store headers/body data/urls in variables to utilise them when using the TEST/SPAM cmd.</h4>
