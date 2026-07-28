@@ -336,7 +336,7 @@ func ExtractSpamUrl(parts []string, store *Data) bool {
 	return true
 }
 
-func HandleSpamGet(remainingArgs []string, conf *SpamConf) bool {
+func HandleSpamGet(remainingArgs []string, conf *SpamConf, store *Data) bool {
 
 	if len(remainingArgs) < 2 {
 		fmt.Println("not enough arguments, please consider: -C")
@@ -351,7 +351,16 @@ func HandleSpamGet(remainingArgs []string, conf *SpamConf) bool {
 				continue
 			}
 
-			s := strings.Trim(remainingArgs[i+1], "\"")
+			var temp string
+
+			val, err := store.Get(remainingArgs[i+1])
+			temp = val
+
+			if err != nil { // if it isnt a variable
+				temp = remainingArgs[i+1]
+			}
+
+			s := strings.Trim(temp, "\"")
 			d, err := strconv.Atoi(s)
 			if err != nil {
 				fmt.Println("invalid number.")
@@ -370,7 +379,7 @@ func HandleSpamGet(remainingArgs []string, conf *SpamConf) bool {
 	return true
 }
 
-func HandleSpamPost(remainingArgs []string, conf *SpamConf) bool {
+func HandleSpamPost(remainingArgs []string, conf *SpamConf, store *Data) bool {
 	if len(remainingArgs) < 4 {
 		fmt.Println("not enough arguments, please consider: -c ['int'] and -d ['json'].")
 		return false
@@ -379,12 +388,22 @@ func HandleSpamPost(remainingArgs []string, conf *SpamConf) bool {
 	for i := range len(remainingArgs) {
 		switch strings.ToUpper(remainingArgs[i]) {
 		case "-C":
-			if len(remainingArgs) <= i+1 {
+			if len(remainingArgs) <= i+1 { 
 				fmt.Println("please include a value for -C.")
 				return false
 			}
+			var temp string
 
-			s := strings.Trim(remainingArgs[i+1], "\"")
+			val, err := store.Get(remainingArgs[i+1])
+			temp = val
+
+			if err != nil {
+				temp = remainingArgs[i+1]
+			}
+
+
+
+			s := strings.Trim(temp, "\"")
 			d, err := strconv.Atoi(s)
 			if err != nil {
 				fmt.Println("not a valid numebr.")
@@ -394,13 +413,22 @@ func HandleSpamPost(remainingArgs []string, conf *SpamConf) bool {
 			conf.reqCap = d
 			i++
 
-		case "-D":
+			case "-D":
 			if len(remainingArgs) <= i+1 {
 				fmt.Println("please include a value for -D.")
 				return false
 			}
 
-			cleanedJson := strings.Trim(remainingArgs[i+1], "\"") // remove newline slashes
+			var temp string
+
+			val, err := store.Get(remainingArgs[i+1])
+			temp = val
+
+			if err != nil {
+				temp = remainingArgs[i+1]
+			}
+
+			cleanedJson := strings.Trim(temp, "\"") // remove newline slashes
 			if ok := IsValidJson([]byte(cleanedJson)); !ok {
 				fmt.Println("invalid json format.")
 				return false

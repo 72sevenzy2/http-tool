@@ -93,7 +93,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 							UtilConf.pass = false
 							continue
 						}
-					
+
 						if uppercased1 == "-D" { // for normal json data
 
 							cleanedData, ok := HandleJsonDataInput(parts, i)
@@ -186,6 +186,7 @@ func StartSession(b *bufio.Scanner, store *Data) {
 				clonedH.Del("authorization")
 
 				respB := resp.Body
+				defer respB.Close()
 				// outputting
 				fmt.Println("response headers:")
 				// fmt.Println(clonedH)
@@ -202,7 +203,6 @@ func StartSession(b *bufio.Scanner, store *Data) {
 					fmt.Print("-") // seperator for headers and resp body so its easier to read
 				}
 				body, err := io.ReadAll(respB) // read respB bytes
-				respB.Close()                  // close after reading response
 				if err != nil {
 					continue // skip current iteration if no body
 				} else {
@@ -245,14 +245,14 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// get req
 				if strings.ToUpper(conf.reqMethod) == "GET" {
-					if ok := HandleSpamGet(remainingArgs, conf); !ok {
+					if ok := HandleSpamGet(remainingArgs, conf, store); !ok {
 						continue
 					}
 				}
 
 				// post req
 				if strings.ToUpper(conf.reqMethod) == "POST" {
-					ok := HandleSpamPost(remainingArgs, conf)
+					ok := HandleSpamPost(remainingArgs, conf, store)
 					if !ok {
 						continue
 					}
@@ -269,8 +269,8 @@ func StartSession(b *bufio.Scanner, store *Data) {
 
 				// NewWorker() param conf
 				WorkerConf := &WorkerConfig{
-					Req: req,
-					Client: &conf.client,
+					Req:     req,
+					Client:  &conf.client,
 					Results: res,
 				}
 
