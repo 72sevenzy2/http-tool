@@ -90,11 +90,10 @@ func Log(conf *LoggerParamConf) *LoggerConf { // move time.Now() (start) and end
 		}(conf, resultChan)
 	}
 
-	var requests []*RequestResult
+	var requests = make([]*RequestResult, 0, *conf.ReqNo)
 
 	for range *conf.ReqNo {
-		res := <-resultChan
-		requests = append(requests, res)
+		requests = append(requests, <-resultChan)
 	}
 
 	fmt.Printf("visited to %s, with method %s", conf.Req.URL.Path, conf.Req.Method)
