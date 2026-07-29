@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"testing"
 )
@@ -18,6 +19,7 @@ func TestLogger(t *testing.T) {
 
 	client := http.Client{}
 	logConf := &LoggerParamConf{
+		ReqNo:        IntPtr(8),
 		Reqclient:    &client,
 		Req:          cl,
 		ReqBodySize:  IntPtr(0),
@@ -28,7 +30,8 @@ func TestLogger(t *testing.T) {
 
 	logConf2 = Log(logConf)
 
-	if logConf2.Reqerr != nil {
-		t.Fatal("found err:", logConf2.Reqerr.Error())
+	for range len(logConf2.Results) {
+		log.Fatal("found error:")
+		logConf2.Err()
 	}
 }

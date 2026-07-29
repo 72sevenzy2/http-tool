@@ -26,10 +26,12 @@ func main() {
 	allowedBody := flag.Bool("b", false, "allow request body logging.")
 	bodySize := flag.Int("s", 0, "body size")
 	session := flag.Bool("session", false, "enable session mode.")
+	// flag for concurrent requests
+	Reqs := flag.Int("c", 1, "number of requests.") // will be passed in Log()
 
 	data := flag.String("d", "", "request data")
 
-	flag.Parse()
+	flag.Parse() // parse flags
 
 	// before validating flag.Args for other features, check is session is set first.
 	if *session {
@@ -90,61 +92,65 @@ func main() {
 	// debugging
 	fmt.Println("bodyAllowed:", *allowedBody)
 
-	// logging
-	LoggingConf := &LoggerConf{}
-
 	// logger parameters config
 	LogParamConf := &LoggerParamConf{
 		Reqclient:    client,
 		Req:          req,
 		ReqBodySize:  bodySize,
 		AllowReqBody: allowedBody,
+		ReqNo:        Reqs,
 	}
 
-	LoggingConf = Log(LogParamConf)
+	LoggingConf := Log(LogParamConf)
 
-	if LoggingConf.Reqbody == "" {
-		fmt.Println("body is empty")
-	}
+	// todo: make one big nested loop for loggingConf.Results instead of redoing.
+	for _, result := range LoggingConf.Results {
+		if result.Reqbody == "" {
+			fmt.Println("body is empty")
+		}
 
-	if LoggingConf.Reqerr != nil {
-		LoggingConf.Err()
-		return
-	}
-
-	defer LoggingConf.Req.Body.Close()
-
-	if *stream {
-		fmt.Println("streaming live data:")
-		_, err := io.Copy(os.Stdout, LoggingConf.Req.Body)
-		if err != nil {
-			log.Fatal(err.Error())
+		if result.Reqerr != nil { // LoggingConf.Reqerr is a []error.
+			LoggingConf.Err()
 			return
 		}
-	} else {
-
-		// checking if request failed if yes then log
-		if LoggingConf.Req.StatusCode >= 400 { // anything over 400 means request wasnt successful
-			fmt.Println("request failed with status:", LoggingConf.DisplayReqStatus())
+		if result.ReqResponse != nil {
+			continue
 		}
+		defer result.ReqResponse.Body.Close()
+		if *stream {
+			fmt.Println("streaming live data:")
+			_, err := io.Copy(os.Stdout, result.ReqResponse.Body)
+			if err != nil {
+				log.Fatal(err.Error())
+				return
+			}
+		} else {
 
-		// outputting
-		fmt.Println("request status:", LoggingConf.DisplayReqStatus())
+			// checking if request failed if yes then log
+			if result.ReqResponse.StatusCode >= 400 { // anything over 400 means request wasnt successful
+				fmt.Println("request failed with status:")
+				LoggingConf.DisplayReqStatus()
+			}
 
-		LoggingConf.DisplayReqLatency()
+			// outputting
+			fmt.Println("request status:")
+			LoggingConf.DisplayReqStatus()
 
-		fmt.Println("\nheaders:")
-		for k, v := range LoggingConf.Req.Header {
-			fmt.Println(k+":", v) // key:value output style for headers
+			LoggingConf.DisplayReqLatency()
+
+			fmt.Println("\nheaders:")
+			for k, v := range result.ReqResponse.Header {
+				fmt.Println(k+":", v) // key:value output style for headers
+			}
+
+			fmt.Println("\nbody:")
+
+			// var format bytes.Buffer // pretty printed body will be stored here before outputted
+
+			LoggingConf.DisplayReqBody()
+
+			LoggingConf.DisplayReqBodyLen()
+
 		}
-
-		fmt.Println("\nbody:")
-
-		// var format bytes.Buffer // pretty printed body will be stored here before outputted
-
-		LoggingConf.DisplayReqBody()
-
-		LoggingConf.DisplayReqBodyLen()
-
 	}
 }
