@@ -12,7 +12,7 @@
 <br>
 <h1 align="center">get started:</h2>
 
-<h2 align="center">setting headers while testing:</h2>
+<h2 align="center">setting headers while testing</h2>
 
 <h3 align="center"> 
     <code> go run . [-H key:value] [URL] </code>
@@ -20,14 +20,14 @@
 
 
 <br>
-<h2 align="center">testing post/get requests:</h2>
+<h2 align="center">testing post/get requests</h2>
 <h3 align="center">
     <code> go run . [-x POST/GET] [URL] </code>
 </h3>
 <h4 align="center">(only works with post and get for now.)</h4>
 <br>
 
-<h2 align="center">with streaming enabled: (streaming gives live response data back.)</h2>
+<h2 align="center">with streaming enabled: (streaming gives live response data response)</h2>
 
 <h3 align="center">
     <code> go run . [-H key:value] [-stream true/false] [URL] </code>
@@ -37,16 +37,21 @@
 
 <br>
 
-<h2 align="center">include response body logging:</h2>
+<h2 align="center">response body logging</h2>
 
 <h3 align="center">
     <code> go run . [-b true/false -s 1024] [URL] </code>
 </h3>
 
-<h4 align="center">(important to note you can set a limit on the response body size to log (positive values only), as with the -s flag, if you want it to be the default (1024), simply do not include the flag).</h4>
-
+<h4 align="center">(you can set a limit on the response body size to log, as with the -s flag, if you want it to be the default (1024), simply do not include the flag and only include the -b flag).</h4>
 <br>
-
+<h2 align="center">concurrent requests</h2>
+<h3 align="center">(send mulitple requests simultaneously):</h4>
+<h3 align="center">
+    <code> go run . [-c (number)] [URL] </code>
+</h3>
+<h4 align="center">be sure to include a reasonable number of requests to be sent.</h4>
+<br>
 <h2 align="center">session mode:</h2>
 
 <h3 align="center">Instead of manually pasting, you can enter session mode to dynamically store urls, headers, etc in a variable and then use that variable to test API's (in which the variable will hold the header/url etc).</h3>
